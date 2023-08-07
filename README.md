@@ -20,7 +20,7 @@ tracks the times and sums them up, all in German, because FRITZ!box is German sn
 - -takelogfrombox
 
 
-fetches log directly from FRITZ!box, otherwise the file
+fetches log directly from FRITZ!box, otherwise the from the file
 ~/fblogs/fritzboxlog-all.txt
 
 ### Files
