@@ -9,4 +9,21 @@ Sends an email whenever the external IP address changes.
 extip, a script that echos
 the current external IP.
 ### Files
-~/.extip holds the IP for comparison 
+~/.extip holds the IP for comparison
+
+## fbdownmail
+Check logfile of FRITZ!box for
+DSL outages and send a mail if there
+were outages. Reports each outage,
+tracks the times and sums them up, all in German, because FRITZ!box is German snd provider is German.
+### Options
+- -takelogfrombox
+
+
+fetches log directly from FRITZ!box, otherwise from the file
+~/fblogs/fritzboxlog-all.txt
+
+### Files
+- ~/fblogs/fritzboxlog-all.txt
+
+created by another script, fblogread, that reads all log messages from the FRITZ!box
