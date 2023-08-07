@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Make sure German umlauts get a usable encoding
+export LANG=POSIX
+export LC_CTYPE=en_US.UTF-8
+
+reportday="yesterday"
+logday="gestrigen"
+
+if [ "$1" = "-takelogfrombox" ]; then
+	logfromfile=0
+else
+	logfromfile=1
+fi
+
+if [ "$1" = "-today" ]; then
+	shift
+	reportday="today"
+	logday="heutigen"
+fi
+
+# Change all these in this block
+mailto="Benno.Kardel@web.de"
+#mailto="kundenservice@congstar.de"
+cc="Benno Kardel <kardel@freenet.de>"
+sender="pi@bkpages.de"
+from="Benno Kardel <kardel@freenet.de>"
+function contractinfo {
+    cat <<EOI
+Kunde:          Benno Kardel
+Kundennummer:   2201954816
+Vertragsnummer: 304215699
+Tarif:          congstar komplett 2 VDSL flex
+Telefon:        +49 172 819 02 98 (+49 89 430 69 06 Festnetz des Anschlusses)
+
+EOI
+}
+
+if [ -r ~/fbdownremarks.txt ]; then
+  remarks=$(cat ~/fbdownremarks.txt)
+else
+  remarks=
+fi
+# Set path
+export PATH=/home/pi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# No need to change below this comment
+priortickets=$HOME/fbpriortickets.txt
+# For the time being ignore prior tickets
+rm -f ${priortickets}
+
+function priortext {
+	actual=1
+	if [ -s $1 ]; then
+		read -d '-' void firstref rest <<< $(head -1 $1)
+		read priorcount rest <<<$(wc -l $1)
+		firstdate="${firstref:4:2}.${firstref:2:2}.20${firstref:0:2}"
+		let actual=$priorcount+1
+		cat <<-EOI
+
+		Dies ist die $actual. Störung seit dem $firstdate.
+		Bisherige Tickets:
+		EOI
+		cat $1
+	fi
+	today=$(date +"%y%m%d")
+	printf "[Vorgang: %s-Kardel-%04d] (Ticket-ID noch nicht erhalten bzw. eingetragen)\n" $today $actual >> $1
+}
+
+function logread {
+	fblogread $(date -d $1 +"-s %d.%m.%y/00:00:00 -b %d.%m.%y/23:59:59")
+}
+
+function logreadfromfile {
+	grep "^$(date -d $1 +'%d.%m.%y')" /home/pi/fblogs/fritzboxlog-all.txt
+}
+
+if [ $logfromfile = 0 ];then
+	text=$(logread $reportday|fbdowntimestat.pl)
+	complaints=$?
+else
+	text=$(logreadfromfile $reportday|fbdowntimestat.pl)
+	complaints=$?
+fi
+
+
+if [ $complaints -gt 0 ]; then
+	# Störung or Störungen / trat or traten
+	if [ $complaints -gt 1 ]; then
+		en="en"
+	else
+		en=""
+	fi
+	set 2>&1 > /tmp/fbset.log
+	cat <<EOI | \
+mail \
+-s "Störung$en meines DSL-Anschlusses - Kundennummer 2201954816" \
+-a "Sender: $sender" \
+-a "From: $from" \
+-a "Cc: $from" \
+-a "Content-Type: text/plain; charset=utf-8" \
+$mailto 
+$(contractinfo)
+
+Sehr geehrte Damen und Herren,
+
+an meinem DSL-Anschluss trat$en folgende Störung$en auf:
+$text
+$(priortext $priortickets)
+$remarks
+
+Mit freundlichen Grüßen
+Benno Kardel
+
+PS.: Hier die FRITZbox Internet-Logdatei des $logday Tages
+$(logread $reportday)
+
+PPS.:  Diese E-Mail wurde automatisch erstellt.
+EOI
+fi
+
+exit
