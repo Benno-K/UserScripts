@@ -1,1 +1,29 @@
-/home/pi/bin/extipmailer
+#!/bin/bash
+HOME=/home/pi
+currentip=$(/usr/local/bin/extip)
+cdate=$(date +%Y-%m-%d,%H:%M:%S)
+cdate="$cdate $(date +%z)"
+if [ -r $HOME/.extip ]
+then
+  lastip=$(cat $HOME/.extip)
+else
+  lastip=""
+fi
+if [ "i$currentip" == "i$lastip" ];
+then
+exit
+fi
+ldate=$(stat -c %y $HOME/.extip)
+ldatetz="+${ldate#*+}"
+ldate="${ldate%.*} $ldatetz"
+/usr/local/bin/extip > ${HOME}/.extip
+cat <<EOI | mail -s "External IP: $(/usr/local/bin/extip)" kardel@freenet.de
+Current IP is $currentip
+recorded $cdate
+
+Last IP was $lastip
+recorded $ldate
+
+Location information (from ip-api.com):
+$(curl http://ip-api.com/json/$(/usr/local/bin/extip) 2>/dev/null|awk -F, '{ for (a = 2; a <= NF-1; a++) print $a}'|sed -e 's/":"/=/;s/"//;s/"//;s/:/=/')
+EOI
