@@ -1,0 +1,323 @@
+#!/usr/bin/perl -w
+
+# Purpose:
+#  Log on to FRITZ!Box
+#  Fetch log data (as specified by option -t)
+#  Log off from FRITZ!Box
+#    If you need only ONE type of log (see -h) just specify that
+#    To avoid repeated logins you can use
+#       -l to log on (without showing any long) which prints a SID
+#       -S that SID for repeated calls to the script
+#       -L to log out from the box after all repeated calls are done
+#  Possible exit values
+#   1: wrong arguments
+#   2: logout failed
+#   3: invalid sid passed
+#   4: login failed
+#   5: HTTP fetch failed
+#   6: Data received has unexpected format
+
+# Author: perlfan@freakmail.de
+my $version="1.0-001";
+
+# Change the following three variables for your FRITZ!Box
+# Username, Password, hostname (or ip) of FRITZ!Box
+my $user = "logfetch";
+my $keycc = "UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK";
+my $box = "fritz.box";
+
+# Hold the event data in a hash
+my %evtrec;
+my $evtcnt=0;
+
+# Store events received from query.lua in a hash
+sub storevts {
+    my $begptr=11;
+    my $endptr=11;
+    if ( substr($_[0],0,10) ne '{"mq_log":') {
+        print STDERR "Record does not start with \"mq:log\" - unexpected input format\n";
+print "DBG: $_[0]\n";
+        exit 6;
+    }
+    while ($endptr < length($_[0])) {
+        while (substr($_[0],$endptr,1) ne '}')  {
+	  $endptr++;
+        }
+        $evtrec[$evtcnt++] = substr($_[0],$begptr+1,$endptr-$begptr-1);
+        $begptr = $endptr+2;
+	$endptr = $begptr;
+    }
+}
+
+# Print a single logfile line out of an event-record
+sub printptr {
+    my %evt;
+    my @pairs = splitrec($_[0]);
+    my $pcnt=0;
+    while (defined($pairs[$pcnt])) {	
+      my ($name,@values) = split ':',$pairs[$pcnt++];
+      my $value = join ':',@values;
+      $name=substr($name,1,-1);
+      next if (length($value)<3);
+      $value=substr($value,1,-1);
+      $value =~ s/\\//g;
+      $evt{$name} = $value;
+    }
+    # Do not record own logins
+    return if ( $evt{"msg"} =~ /^Anmeldung des Benutzers $user an der FRITZ!Box-Benutzeroberfläche von IP-Adresse / );
+    if (defined($opt_s)) {
+	my ($dat,$tim) = split '/',$opt_s;
+	my @dp = split '\.',$dat;
+	my @tp = split ':',$tim;
+	my $cmp = int($dp[2].$dp[1].$dp[0].$tp[0].$tp[1].$tp[2]);
+	@dp = split '\.',$evt{"_node"};
+	@tp = split ':',$evt{"time"};
+	my $cur = int($dp[2].$dp[1].$dp[0].$tp[0].$tp[1].$tp[2]);
+        if ($cur > $cmp) {	
+            printf "%s\t%s\t%s\n",$evt{"_node"},$evt{"time"},$evt{"msg"};
+        }
+    } else {
+        printf "%s\t%s\t%s\n",$evt{"_node"},$evt{"time"},$evt{"msg"};
+    }
+#    printf "%s\t%s\t%s\t(%s/%s)\n",$evt{"_node"},$evt{"time"},$evt{"msg"},$evt{"type"},$evt{"ref"};
+}
+
+# Store password of Fritz!box using the shell command
+# printf 'YourFritzboxPassword' | ccencrypt -K $keycc > ~/.fblogcred
+# Change keycc to your own key
+
+# Needed to convert from ISO-8859-1 to UTF-16LE (used by login)
+use Encode qw(decode encode);
+# Needed to build an md5sum (used by login)
+use Digest::MD5;
+# Parse options from cmdline
+use Getopt::Std;
+# User agent to process HTTP-requests
+use LWP::UserAgent;
+# Parser to parse XML-responses
+use XML::Simple;
+
+# URLs for logs
+# Form http://fritz.box/system/syslog.lua?sid=<sid>&tab=<tabname>
+# Build an associative array for those
+#my @tabnames = qw(aus internet telefon usb wlan system);
+#for my $tn (@tabnames) {
+#    $ti = substr($tn,0,1);
+#    $tabs{$ti} = $tn;
+#}
+
+my $nullsid = "0000000000000000";
+my $ua = LWP::UserAgent->new;
+$ua->agent("fblogread/0.1");
+
+# Usage sub
+sub usage {
+    # Parameter must be 0 or 1, used as exit status and index to FD
+    my @fd = (*STDOUT,*STDERR);
+    my $sfd = $fd[$_[0]];
+    print $sfd <<EOF;
+Usage: [-h] $0
+
+     -h   - help - this text
+
+     -s       - print entries since  - format dd.mm.yy/hh:mm:ss
+     -b       - print entries before - format dd.mm.yy/hh:mm:ss
+     -l       - only setup session (login) - prints session id (SID)
+     -S sid   - do not setup session - use passed sid from previous -l
+     -L sid   - logout - use passed sid from previous -l
+     -v       - print version and exit
+EOF
+#    for my $tn (sort keys %tabs) {
+#        printf $sfd "     -t %s - print %s messages\n",$tn,$tabs{$tn};
+#    }
+    exit $_[0];
+}
+
+# Compare two dates (format dd.mm.yy/hh:mm:ss)
+sub datecompare {
+  my @di;
+  for (my $i = 0; $i < 2; $i++) {
+    my ($dp, $tp);
+    ($dp,$tp) = split '/',$_[$i];
+    my ($dd,$mm,$yy) = split '\.',$dp;
+    my ($HH,$MM,$SS) = split ':',$tp;
+    $di[$i] = "$yy$mm$dd$HH$MM$SS"
+  }
+  return 0 if ($di[0] eq $di[1]);
+  return 1 if ($di[0] lt $di[1]);
+  return -1 if ($di[0] gt $di[1]);
+  return 999;
+}
+
+sub post {
+    my $url = shift @_;
+    my $postdata = shift @_;
+
+    # Build request
+    my $req = HTTP::Request->new(POST => $url);
+    $req->content_type('application/x-www-form-urlencoded');
+    $req->content($postdata);
+
+#    printf "DBG: postdata=%s\n",$postdata;
+
+    # Pass request to the user agent and get a response back
+    my $res = $ua->request($req);
+
+    # Check the outcome of the response
+    if ($res->is_success) {
+	$pl = XML::Simple->new; #(Style => 'Tree');
+	my $tree = $pl->XMLin($res->content);
+#	printf "DBG: sid=%s,challenge=%s\n",$tree->{SID},$tree->{Challenge};
+	return ($tree->{SID},$tree->{Challenge});
+    }
+    else {
+	print STDERR "Error fetching $url: ",$res->status_line, "\n";
+	return -1;
+    }
+    return -2;
+}
+
+sub login {
+    my $fbox = shift @_;
+    my $challenge = shift @_;
+    my $user = shift @_;
+    # Now convert the challenge (using the password) to a response
+    my $word = `ccat -K $keycc ~/.fblogcred.$user`;
+    #   build the response-string
+    my $cpstr8 = "$challenge-$word";
+    #   .. convert it to binary ...
+    my $cpoctets = decode("iso-8859-1",$cpstr8);
+    #   .. and finally to UTF16
+    my $cpstr16 = encode("utf-16le",$cpoctets);
+        # Now get the md5sum for that response
+    my $md5sum = Digest::MD5->new->add($cpstr16)->hexdigest;
+
+    # Build the final response and the POST data
+    my $response="$challenge-$md5sum";
+    my $post = sprintf "response=%s-%s&username=%s",$challenge,$md5sum,$user;
+    return (post ('http://'.$fbox.'/login_sid.lua',$post));    
+}
+
+sub logout {
+    my $fbox = shift @_;
+    my $sid  = shift @_;
+    return (post ('http://'.$fbox.'/login_sid.lua',"sid=$sid&logout=1"));
+}
+
+sub getsid {
+    my $fbox = shift @_;
+    my $sid  = shift @_||$nullsid;
+    return (post ('http://'.$fbox.'/login_sid.lua',"sid=$sid"));
+}
+
+sub splitrec {
+    my $inquotes=0;
+    my $begptr=0;
+    my $len=1;
+    my @ret=();
+    return @ret if ($_[0] eq "");
+    for (my $i=0;$i<=length($_[0]);$i++,$len++) {
+	 if ( substr($_[0],$i,1) eq "\"" ) {
+	     if ( $inquotes == 0) {	
+	         $inquotes=1;
+	     } else {
+	         $inquotes=0;
+	     }
+	 }
+	 if ( ( substr($_[0],$i,1) eq "," ) && ( $inquotes == 0 ) ) {
+#             print "BINGO:",substr($_[0],$begptr,$len-1),"\n";
+             push @ret, substr($_[0],$begptr,$len-1);
+             $len=0;
+             $begptr = $i+1;
+	 }
+    }
+    push @ret, substr($_[0],$begptr,$len);
+#    print "BINGO:",substr($_[0],$begptr,$len),"\n";
+#    print "retDBG: ",$ret[0],"\n";
+    return @ret;
+}
+
+sub printlog {
+    $evtcnt--;
+    while (--$evtcnt >= 0) {
+        printptr $evtrec[$evtcnt];
+    }
+}
+
+# Parse options
+if (!getopts("hs:b:lLS:v")) {
+  usage(1);
+}
+
+# Show help if requested
+if ($opt_h) {
+  undef $opt_h; # Make -w happy somehow
+  usage(0);
+}
+
+# Show version if requested
+if ($opt_v) {
+  undef $opt_v; # Make -w happy somehow
+  print $version,"\n";
+  exit 0;
+}
+
+# Define vars for session-ID and challenge
+my ($sid, $challenge);
+
+# Process main options
+# -L - only log out
+if (defined($opt_L)) {
+    if (logout($box,$opt_L) eq $nullsid) {
+	exit 0;
+    } else {
+	exit 2;
+    }
+# -S - use SID form previous -l (or other source)
+} elsif (defined($opt_S)) {
+    ($sid,$challenge) = getsid ($box,$opt_S);
+    if ($sid eq $nullsid) {
+	print STDERR "Your SID $opt_S is not valid\n";
+	exit 3;
+    }
+# otherwise just log in (but log out an end of script
+} else {
+    ($sid,$challenge) = getsid ($box,$nullsid);
+    ($sid,$challenge) = login($box,$challenge,$user);
+    if ($sid eq $nullsid) {
+	print STDERR "Logon failed - check your credentials\n";
+	exit 4;
+    }
+    if ($opt_l) {
+	print $sid,"\n";
+	exit 0;
+	undef $opt_l; # Make -w happy somehow
+    }
+}
+
+# Build URL
+#my $url = "http://$box/system/syslog.lua?sid=$sid&tab=$tabs{$opt_t}&stylemode=print&popupwnd=1";
+my $url = "http://fritz.box/query.lua?sid=$sid&mq_log=logger:status/log_separate/list(time,msg,ref,type)/type=2";
+
+#print "DBG: url=$url\n";
+
+# Now fetch the desired data
+my $req = HTTP::Request->new(GET => $url);
+
+# Pass request to the user agent and get a response back
+my $res = $ua->request($req);
+if ($res->is_success) {
+    # Print out the log data
+    storevts($res->content);
+    printlog();
+} else {
+    # Signal error
+    print STDERR "Error fetching $url: ",$res->status_line, "\n";
+    exit 5;
+}
+
+if (!defined($opt_S)) {
+    logout($box,$opt_S||$sid); # Use either specified sid ot the one just got
+}
+
+exit 0;

@@ -1,0 +1,27 @@
+#!/bin/bash
+export PATH=${HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+logdir=${HOME}/fblogs
+fbn=$logdir/fritzboxlog-all.txt
+
+# Log on to Fritzbox, get session id
+sid=$(fblogread -l)
+
+if [ -s $fbn ]; then
+  read ld lt rest <<<$(tail -1 $fbn)
+  # If FritzBox IS offline, latest message do not have a real date
+  # so take the logfile mod date in that case
+  if [ "$ld" = "01.01.70" ]; then
+    since=$(date +"%m.%d.%y/%H:%M:%S" --date="@$(stat --printf %Y $fbn)")
+  else
+    since="-s $ld/$lt"
+  fi
+else
+  since=
+fi
+fblogread -S $sid $since >> $fbn
+
+# The logout seems to cause an error message - so trying without it
+## Log out from Fritzbox
+#fblogread -L $sid
+exit
