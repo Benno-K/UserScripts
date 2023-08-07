@@ -26,4 +26,16 @@ fetches log directly from FRITZ!box, otherwise from the file
 ### Files
 - ~/fblogs/fritzboxlog-all.txt
 
-created by another script, fblogread, that reads all log messages from the FRITZ!box
+created by another script, fblogfetcher,(which calls fblogread), that reads all log messages from the FRITZ!box
+
+## fblogfetcher
+Fetches log data from FRITZ!box (all types, as you can see in the WebGUI as "System/Ereignisse/Alle", but only one day. If no date is specified it uses yesterdsy 
+
+### Arguments
+
+Specify yesterday or today or any other date to get the logs for that day. Off course it will return nothing at all if the requested date is before boot-time of the FRITZ!box.
+
+## fblogread
+called ny fblogfetcher 
+
+Actually sends a query to FRITZ!box and returns ALL log messages since boot.
