@@ -8,6 +8,7 @@ reportday="yesterday"
 logday="gestrigen"
 
 if [ "$1" = "-takelogfrombox" ]; then
+  shift
 	logfromfile=0
 else
 	logfromfile=1
