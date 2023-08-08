@@ -4,6 +4,6 @@ if [ "$1" = "" ];then
 else
   cfil="$1"
 fi
-keycc="UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK"
-ccat -K "$keycc" -f word.txt
+. ~/.fblogsrc
+ccat -K "$keycc" -f $cfil
 exit
