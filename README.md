@@ -38,4 +38,4 @@ Specify yesterday or today or any other date to get the logs for that day. Off c
 ## fblogread
 called ny fblogfetcher 
 
-Actually sends a query to FRITZ!box and returns ALL log messages since boot.
+Actually sends a query to FRITZ!box and returns ALL log messages since boot. Needs an user account on thr box.
