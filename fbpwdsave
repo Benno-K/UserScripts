@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ "$1" = "" ];then
+  read -p "Output file: " cfil
+else
+  cfil="$1"
+fi
+keycc="UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK"
+read -s -p "?: " word
+echo -n  "$word"|ccencrypt -K "$keycc" > $cfil
+exit

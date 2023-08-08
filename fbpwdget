@@ -1,0 +1,9 @@
+#!/bin/bash
+if [ "$1" = "" ];then
+  read -p "Input file: " cfil
+else
+  cfil="$1"
+fi
+keycc="UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK"
+ccat -K "$keycc" -f word.txt
+exit
