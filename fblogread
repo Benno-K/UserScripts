@@ -23,9 +23,10 @@ my $version="1.0-001";
 # Change the following three variables for your FRITZ!Box
 # Username, Password, hostname (or ip) of FRITZ!Box
 my $user = "logfetch";
-. ~/.fblogsrc
-# Source something like
+
+# Now source something like
 # my $keycc = "UmVnaXN0cmllcnVuDfCpysK";
+. ~/.fblogsrc
 my $box = "fritz.box";
 
 # Hold the event data in a hash
