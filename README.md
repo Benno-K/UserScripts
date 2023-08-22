@@ -62,10 +62,10 @@ out of a credentials file.
 $1 fikepath to the credentials file
 
 ### Files
-Needs '~/.fblogsrc' which must contain
+Needs `~/.fblogsrc` which must contain
 a definition like this:
 
-`my $keycc = "UmVnaXN0cmllcnVuDfCpysK";``
+`my $keycc = "UmVnaXN0cmllcnVuDfCpysK";`
 
 That file is sourced by fblogread,
 fbpwdget and fbpwdsave to decrypt 
