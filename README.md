@@ -39,3 +39,36 @@ Specify yesterday or today or any other date to get the logs for that day. Off c
 called ny fblogfetcher 
 
 Actually sends a query to FRITZ!box and returns ALL log messages since boot. Needs an user account on thr box.
+
+### Files
+Needs ~/.fblogsrc which must contain
+a definition like this:
+
+`keycc = "UmVnaXN0cmllcnVuDfCpysK"`
+
+That file is sourced by fblogread
+to decrypt the contents of the 
+credentials file (~/,fböogcred.logfetch) which
+contains the crypted password
+of the non-privileged account
+
+
+## fbpwdget, fbpwdsave
+
+Skripts to get an save the password 
+out of a credentials file.
+
+### Arguments:
+#1: filepath to the credentials file
+
+### Files
+Needs ~/.fblogsrc which must contain
+a definition like this:
+
+`keycc = "UmVnaXN0cmllcnVuDfCpysK`
+
+That file is sourced by fblogread,
+fbpwdget and fbpwdsave to decrypt 
+the contents of the credentials file (~/,fböogcred.logfetch) which
+contains the crypted password
+of the non-privileged account
