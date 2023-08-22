@@ -59,7 +59,7 @@ Skripts to get an save the password
 out of a credentials file.
 
 ### Arguments:
-$1 fikepath to the credentials file
+#1: filepath to the credentials file
 
 ### Files
 Needs ~/.fblogsrc which must contain
