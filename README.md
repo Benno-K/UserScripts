@@ -58,14 +58,14 @@ of the non-privileged account
 Skripts to get an save the password 
 out of a credentials file.
 
-Arguments:
+### Arguments:
 $1 fikepath to the credentials file
 
-### File{}s
-Needs ~/.fblogsrc which must contain
+### Files
+Needs `~/.fblogsrc' which must contain
 a definition like this:
 
-my $keycc = "UmVnaXN0cmllcnVuDfCpysK";
+`my $keycc = "UmVnaXN0cmllcnVuDfCpysK";'
 
 That file is sourced by fblogread,
 fbpwdget and fbpwdsave to decrypt 
