@@ -44,7 +44,7 @@ Actually sends a query to FRITZ!box and returns ALL log messages since boot. Nee
 Needs ~/.fblogsrc which must contain
 a definition like this:
 
-my $keycc = "UmVnaXN0cmllcnVuDfCpysK";
+`my $keycc = "UmVnaXN0cmllcnVuDfCpysK";`
 
 That file is sourced by fblogread
 to decrypt the contents of the 
@@ -62,7 +62,7 @@ out of a credentials file.
 $1 fikepath to the credentials file
 
 ### Files
-Needs `~/.fblogsrc` which must contain
+Needs ~/.fblogsrc which must contain
 a definition like this:
 
 `my $keycc = "UmVnaXN0cmllcnVuDfCpysK";`
