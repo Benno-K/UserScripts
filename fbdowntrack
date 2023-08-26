@@ -1,0 +1,186 @@
+#!/bin/bash
+# Modes: mail,track,trackwithlog,both
+mode=mail
+logfromfile=1
+logdir=~/fblogs/tracked
+
+if [ ! -d "$logdir" ]; then
+  echo "Directory for logfiles ($logdir) not accessible" >&2
+  exit 2
+fi
+
+# Make sure German umlauts get a usable encoding
+export LANG=POSIX
+export LC_CTYPE=en_US.UTF-8
+
+reportday="yesterday"
+while [ "${1:0:1}" = "-" ]
+  do
+  if [ "$1" == "-takelogfrombox" ]; then
+    shift
+    logfromfile=0
+  fi
+
+  if [ "$1" = "-today" ]; then
+    shift
+    reportday="today"
+  fi
+  if [ "$1" = "-mode" ]; then
+    shift
+    mode="$1"
+  fi
+  shift
+  done
+
+if [ "$1" != "" ];then
+  reportday=$1
+  shift
+fi
+
+if [ "$mode" = "trackwithlog" ];then
+  includelog=1
+else
+  includelog=0
+fi
+
+if [ "${mode:0:5}" = "track" ];then
+  tracklog=$logdir/$reportday.txt
+fi
+
+#cat<<EOI
+#mode=$mode
+#logfromfile=$logfromfile
+#reportday÷$reportday
+#args: $@
+#EOI
+
+# Change all these in this block
+mailto="Benno Kardel <kardel@freenet.de>"
+#mailto="kundenservice@congstar.de"
+cc="Benno.Kardel@web.de"
+sender="pi@bkpages.de"
+from="Benno Kardel <kardel@freenet.de>"
+function contractinfo {
+    cat <<EOI
+Kunde:          Benno Kardel
+Kundennummer:   2201954816
+Vertragsnummer: 304215699
+Tarif:          congstar komplett 2 VDSL flex
+Telefon:        +49 172 819 02 98 (+49 89 430 69 06 Festnetz des Anschlusses)
+
+EOI
+}
+
+if [ -r ~/fbdownremarks.txt ]; then
+  remarks=$(cat ~/fbdownremarks.txt)
+else
+  remarks=
+fi
+# Set path
+export PATH=/home/pi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# No need to change below this comment
+priortickets=$HOME/fbpriortickets.txt
+# For the time being ignore prior tickets
+rm -f ${priortickets}
+
+function priortext {
+  actual=1
+  if [ -s $1 ]; then
+    read -d '-' void firstref rest <<< $(head -1 $1)
+    read priorcount rest <<<$(wc -l $1)
+    firstdate="${firstref:4:2}.${firstref:2:2}.20${firstref:0:2}"
+    let actual=$priorcount+1
+    cat <<-EOI
+
+Dies ist die $actual. Störung seit dem $firstdate.
+Bisherige Tickets:
+EOI
+    cat $1
+  fi
+  today=$(date +"%y%m%d")
+  printf "[Vorgang: %s-Kardel-%04d] (Ticket-ID noch nicht erhalten bzw. eingetragen)\n" $today $actual >> $1
+}
+
+function logread {
+	fblogread $(date -d $1 +"-s %d.%m.%y/00:00:00 -b %d.%m.%y/23:59:59")
+}
+
+function logreadfromfile {
+        fritzdate=${1:8:2}.${1:5:2}.${1:2:2}
+	if [ "$1" != "" ];then
+          grep "^$fritzdate" /home/pi/fblogs/fritzboxlog-all.txt
+	else
+	  thisdate=$(date +"%d.%m.%y")
+          fritzdate=${thisdate:8:2}.${thisdate:5:2}.${thisdate:2:2}
+          grep "^$(date -d $1 +'%d.%m.%y')" /home/pi/fblogs/fritzboxlog-all.txt
+fi
+}
+if [ $logfromfile = 1 ];then
+	text=$(logreadfromfile $reportday|fbdowntimestat.pl)
+	complaints=$?
+else
+	text=$(logread $reportday|fbdowntimestat.pl)
+	complaints=$?
+fi
+
+if [ $complaints -gt 0 ]; then
+	# Störung or Störungen / trat or traten
+  if [ $complaints -gt 1 ]; then
+    en="en"
+  else
+    en=""
+  fi
+  set 2>&1 > /tmp/fbset.log
+  thisdate=$(date +"%d.%m.%y")
+  if [ "$reportday" = "" ]; then
+    fritzdate=${thisdate:8:2}.${thisdate:5:2}.${thisdate:2:2}
+  else
+    fritzdate=${reportday:8:2}.${reportday:5:2}.${reportday:2:2}
+  fi
+# Für CC unten einfügen
+#-a "Cc: $from" \
+
+	# Matches track and zrackwithlog
+	if [ "${mode:0:5}" != "track" ];then
+    cat <<EOI | \
+mail \
+-s "${fritzdate}: Störung$en meines DSL-Anschlusses - Kundennummer 2201954816" \
+-a "Sender: $sender" \
+-a "From: $from" \
+-a "Content-Type: text/plain; charset=utf-8" \
+$mailto 
+$(contractinfo)
+
+Sehr geehrte Damen und Herren,
+
+an meinem DSL-Anschluss trat$en folgende Störung$en auf:
+$text
+$(priortext $priortickets)
+$remarks
+
+Mit freundlichen Grüßen
+Benno Kardel
+
+PS.: Hier die FRITZbox Logdatei
+$(logreadfromfile $reportday)
+
+PPS.:  Diese E-Mail wurde automatisch erstellt.
+EOI
+  else
+    cat <<EOI > $tracklog
+${fritzdate}: Störung$en meines DSL-Anschlusses
+$text
+$(priortext $priortickets)
+$remarks
+EOI
+    if [ "$includelog" = "1" ];then
+      cat <<EOI >> $tracklog
+FRITZbox Logdatei:
+$(logreadfromfile $reportday)
+EOI
+    fi
+  fi
+fi
+
+exit
