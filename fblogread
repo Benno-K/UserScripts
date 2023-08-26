@@ -24,9 +24,8 @@ my $version="1.0-001";
 # Username, Password, hostname (or ip) of FRITZ!Box
 my $user = "logfetch";
 
-# Now source something like
-# keycc = "UmVnaXN0cmllcnVuDfCpysK"
-. ~/.fblogsrc
+# Make sure below  matches  ~/.fblogsrc
+my $keycc = "UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK";
 my $box = "fritz.box";
 
 # Hold the event data in a hash
