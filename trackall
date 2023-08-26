@@ -1,0 +1,3 @@
+en=$(date -d 2023-08-30 +"%s")
+st=$(date -d 2017-08-18 +"%s")
+let i=$st;while [ $i -lt $en ];do date -d @$i +"%d.%m.%y - (%F)";./fbdowntrack -mode track $(date -d @$i +"%F");let i=$i+86400;done
