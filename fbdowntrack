@@ -2,7 +2,7 @@
 # Modes: mail,track,trackwithlog,both
 mode=mail
 logfromfile=1
-logdir=~/fblogs/tracked
+trackdir=~/fblogs/tracked
 
 
 # Make sure German umlauts get a usable encoding
@@ -20,9 +20,9 @@ while [ "${1:0:1}" = "-" ]
     shift
     reportday="today"
   fi
-  if [ "$1" = "-logdir" ]; then
+  if [ "$1" = "-trackdir" ]; then
     shift
-    logdir="$1"
+    trackdir="$1"
     shift
   fi
   if [ "$1" = "-mode" ]; then
@@ -37,8 +37,8 @@ if [ "$1" != "" ];then
   shift
 fi
 
-if [ ! -d "$logdir" ]; then
-  echo "Directory for logfiles ($logdir) not accessible" >&2
+if [ ! -d "$trackdir" ]; then
+  echo "Directory for logfiles ($trackdir) not accessible" >&2
   exit 2
 fi
 
@@ -49,7 +49,7 @@ else
 fi
 
 if [ "${mode:0:5}" = "track" ];then
-  tracklog=$logdir/$reportday.txt
+  tracklog=$trackdir/$reportday.txt
 fi
 
 #cat<<EOI
