@@ -12,6 +12,7 @@ export LC_CTYPE=en_US.UTF-8
 reportday="yesterday"
 while [ "${1:0:1}" = "-" ]
   do
+  candidate=$1
   if [ "$1" == "-takelogfrombox" ]; then
     shift
     logfromfile=0
@@ -23,11 +24,14 @@ while [ "${1:0:1}" = "-" ]
   if [ "$1" = "-trackdir" ]; then
     shift
     trackdir="$1"
-    shift
   fi
   if [ "$1" = "-mode" ]; then
     shift
     mode="$1"
+  fi
+  if [ "$1" = "$candidate" ];then
+    echo "invalid option: $1"  >&2
+    exit 2
   fi
   shift
   done
@@ -37,8 +41,8 @@ if [ "$1" != "" ];then
   shift
 fi
 
-if [ ! -d "$trackdir" ]; then
-  echo "Directory for logfiles ($trackdir) not accessible" >&2
+if [ ! -d "$trackdir" ];then
+	echo "Directory for logfiles (${trackdir}) not accessible" >&2
   exit 2
 fi
 
