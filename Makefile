@@ -1,6 +1,7 @@
-FBTARGETS = fbpwdsave fbpwdget fblogfetcher fblogread # fbdownmail
-TOOLTARGETS = extipmailer
-LBINDIR = /usr/local/bin
+TARGETS = fbdowntrack
+UBINDIR = ~/bin/
+all: $(TARGETS)
+	install -m 755 -t $(UBINDIR) $(TARGETS)
 usage:
 	@echo "please use"
 	@echo "  make fritz"
