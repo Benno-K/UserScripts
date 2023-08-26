@@ -4,10 +4,6 @@ mode=mail
 logfromfile=1
 logdir=~/fblogs/tracked
 
-if [ ! -d "$logdir" ]; then
-  echo "Directory for logfiles ($logdir) not accessible" >&2
-  exit 2
-fi
 
 # Make sure German umlauts get a usable encoding
 export LANG=POSIX
@@ -20,10 +16,14 @@ while [ "${1:0:1}" = "-" ]
     shift
     logfromfile=0
   fi
-
   if [ "$1" = "-today" ]; then
     shift
     reportday="today"
+  fi
+  if [ "$1" = "-logdir" ]; then
+    shift
+    logdir="$1"
+    shift
   fi
   if [ "$1" = "-mode" ]; then
     shift
@@ -35,6 +35,11 @@ while [ "${1:0:1}" = "-" ]
 if [ "$1" != "" ];then
   reportday=$1
   shift
+fi
+
+if [ ! -d "$logdir" ]; then
+  echo "Directory for logfiles ($logdir) not accessible" >&2
+  exit 2
 fi
 
 if [ "$mode" = "trackwithlog" ];then
