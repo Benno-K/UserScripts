@@ -1,4 +1,5 @@
 #!/bin/bash
+# Replaced by fbdowntrack
 
 # Make sure German umlauts get a usable encoding
 export LANG=POSIX
