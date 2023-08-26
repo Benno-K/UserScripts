@@ -1,4 +1,4 @@
-TARGETS = extipmailer fbdownmail fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave
+TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave
 UBINDIR = ~/bin/
 all: $(TARGETS)
 	install -m 755 -t $(UBINDIR) $(TARGETS)
