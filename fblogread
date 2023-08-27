@@ -24,8 +24,26 @@ my $version="1.0-001";
 # Username, Password, hostname (or ip) of FRITZ!Box
 my $user = "logfetch";
 
+sub getkeycc {
+  open(BASHSRC, '<', $_[0]) or die "failed to open file $_[0]";
+  while (<BASHSRC>) {
+    chomp;
+    if (! m/^\s*keycc=/) {next};
+    s/^\s*keycc=//;
+    s/#.*//;
+    s/\"//g;
+    s/\'//g;
+    $keycc=$_;
+  }
+  close BASHSRC;
+  return $keycc;
+}
+
 # Make sure below  matches  ~/.fblogsrc
-my $keycc = "UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK";
+#my $keycc = "UmVnaXN0cmllcnVuZ3Nwcm96ZXNzODfCpysK";
+# "source" the bash file with the keycc, as a bash-shell wpuld do
+my $keycc = getkeycc($ENV{HOME}.'/.fblogsrc');
+
 my $box = "fritz.box";
 
 # Hold the event data in a hash
