@@ -24,6 +24,9 @@ my $version="1.0-001";
 # Username, Password, hostname (or ip) of FRITZ!Box
 my $user = "logfetch";
 
+# zzzzzzzz a file normally sourced
+# by various bash scripts to 
+# define the variable keycc
 sub getkeycc {
   open(BASHSRC, '<', $_[0]) or die "failed to open file $_[0]";
   while (<BASHSRC>) {
