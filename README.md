@@ -89,5 +89,6 @@ Outputs something like
     2021-10-26  14m17s DSL outage
     2022-02-07  14m12s DSL outage
     2022-05-11  15m13s DSL outage
+
 (assuming you run it in autumn 2022 and have now track-files
  before 2020 :-))
