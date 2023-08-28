@@ -81,8 +81,6 @@ fbdowntrack stores
 Gives a short summary of all tracked outages by date
 
 Outputs something like
-(assuming you run it in autumn 2022 and have now track-files
- before 2020 :-))
 
     2020-09-16  3m21s Low rate
     2020-09-16  13m41s DSL outage
@@ -92,3 +90,8 @@ Outputs something like
     2021-10-26  14m17s DSL outage
     2022-02-07  14m12s DSL outage
     2022-05-11  15m13s DSL outage
+
+
+(assuming you run it in autumn
+2022 and have now track-files
+before 2020 :-))
