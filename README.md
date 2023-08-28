@@ -83,6 +83,7 @@ Gives a short summary of all tracked outages by date
 Outputs something like
 (assuming you run it in autumn 2022 and have now track-files
  before 2020 :-))
+
     2020-09-16  3m21s Low rate
     2020-09-16  13m41s DSL outage
     2020-11-04  3m11s DSL outage
