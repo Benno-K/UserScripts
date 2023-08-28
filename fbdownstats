@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Create statistics of outagescollected by fbdowntrack
+
+# where fbdowntrack stores the results
+statdir=~/fblogs/tracked
+
+cd $statdir
+(grep Gesamt *|sed -e 's/  //g' -e 's/ Stunde.*, /h/g' -e 's/ Minute.*, /m/g' -e 's/ Sekunde.*/s/g'| awk -F : '/Internet/{printf "%s %s DSL outage\n",substr($1,0,10),$3}'
+grep 'Gesamtzeit mit' *|sed -e 's/  //g' -e 's/ Stunde.*, /h/g' -e 's/ Minute.*, /m/g' -e 's/ Sekunde.*/s/g' | awk -F : '/Mindergeschwindigkeit/{printf "%s %s Low rate\n",substr($1,0,10),$3}'
+)\
+|sort
