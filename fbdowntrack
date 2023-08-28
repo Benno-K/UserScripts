@@ -2,44 +2,93 @@
 # Modes: mail,track,trackwithlog,both
 mode=mail
 logfromfile=1
+personal=~/.fbdowntrack.personal-data
 trackdir=~/fblogs/tracked
 
+# Source personal data here
+. $personal
 
 # Make sure German umlauts get a usable encoding
 export LANG=POSIX
 export LC_CTYPE=en_US.UTF-8
 
-reportday="yesterday"
+reportday=$(date -d yesterday +%F)
 while [ "${1:0:1}" = "-" ]
   do
+  if [[ "$1" =~ "=" ]];then
+    echo "option must not and cannot contain an equal-sign (÷)" >&2
+    echo "option \"$1\" is invalid" >&2
+    exit 4
+  fi
   candidate=$1
-  if [ "$1" == "-takelogfrombox" ]; then
-    shift
+  toparse=$1
+  shift
+  if [ "$candidate" == "-takelogfrombox" ]; then
     logfromfile=0
+    continue
   fi
-  if [ "$1" = "-today" ]; then
-    shift
+  if [ "$candidate" = "-today" ]; then
     reportday="today"
+    continue
   fi
-  if [ "$1" = "-trackdir" ]; then
-    shift
+  if [ "$candidate" = "-trackdir" ]; then
     trackdir="$1"
-  fi
-  if [ "$1" = "-mode" ]; then
     shift
-    mode="$1"
+    continue
   fi
-  if [ "$1" = "$candidate" ];then
+  if [ "$candidate" = "-mode" ]; then
+    mode="$1"
+    shift
+    continue
+  fi
+  if [ "${1:0:2}" = "-h" ]; then
+    cat <<EOI
+Usage:
+$0 [options] [YYYY-MM-DD]
+  where YYYY-MM-DD specify
+  which day's log messages
+  you want to be checked,
+  defaults to yesterday.
+
+  Options:
+    -mode
+      specify one of 
+        both
+        track
+	trackwithlog
+        mail
+     defaults to both
+   -trackdir
+      specify where
+      trackfiles are stored
+   -today use today as date
+   -takelogfrombox
+     retrieve log directly
+     from FRITZ!box
+EOI
+    exit
+  fi
+  if [ "$1" = "$toparse" ];then
     echo "invalid option: $1"  >&2
     exit 2
   fi
-  shift
   done
 
 if [ "$1" != "" ];then
   reportday=$1
+  tracklog=$trackdir/$reportday.txt
   shift
 fi
+
+#cat <<EOI
+###DBG: debug exit
+#  mode=$mode
+#  trackdir=$trackdir
+#  tracklog=$tracklog
+#  logfromfile=$logfromfile
+#  reportday=$reportday
+#EOI
+#exit 9999
 
 if [ ! -d "$trackdir" ];then
 	echo "Directory for logfiles (${trackdir}) not accessible" >&2
@@ -51,34 +100,6 @@ if [ "$mode" = "trackwithlog" ];then
 else
   includelog=0
 fi
-
-if [ "${mode:0:5}" = "track" ];then
-  tracklog=$trackdir/$reportday.txt
-fi
-
-#cat<<EOI
-#mode=$mode
-#logfromfile=$logfromfile
-#reportday÷$reportday
-#args: $@
-#EOI
-
-# Change all these in this block
-mailto="Benno Kardel <kardel@freenet.de>"
-#mailto="kundenservice@congstar.de"
-cc="Benno.Kardel@web.de"
-sender="pi@bkpages.de"
-from="Benno Kardel <kardel@freenet.de>"
-function contractinfo {
-    cat <<EOI
-Kunde:          Benno Kardel
-Kundennummer:   2201954816
-Vertragsnummer: 304215699
-Tarif:          congstar komplett 2 VDSL flex
-Telefon:        +49 172 819 02 98 (+49 89 430 69 06 Festnetz des Anschlusses)
-
-EOI
-}
 
 if [ -r ~/fbdownremarks.txt ]; then
   remarks=$(cat ~/fbdownremarks.txt)
