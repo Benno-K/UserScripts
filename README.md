@@ -21,10 +21,11 @@ tracks the times and sums them up, all in German, because FRITZ!box is German sn
 
 
 fetches log directly from FRITZ!box, otherwise from the file
-~/fblogs/fritzboxlog-all.txt
+~/fblogs/fblog-YYYY.log where
+YYYY represents the year
 
 ### Files
-- ~/fblogs/fritzboxlog-all.txt
+- ~/fblogs/fblog-YYYY.log where
 
 created by another script, fblogfetcher,(which calls fblogread), that reads all log messages from the FRITZ!box
 
