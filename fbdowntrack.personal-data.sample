@@ -1,0 +1,20 @@
+# Copy this to ~/.fbdowntrack.personal-data 
+# and adapt it's contents to
+# your needs
+# Change all these according to your needs
+mailto="service@yourprovider.com"
+cc="your-own-mail@yourmailprovider.com"
+sender="$cc"
+from="Your Name <you@yourprovider.com>"
+function contractinfo {
+    cat <<EOI
+Customer:       Your Name
+Customer-Number:1234567890
+Contract-Number:0987654321
+Product:        SuperDuperDSL++
+Phone:          +49 123 456 789
+Phone of DSL:   +49 789 465 321
+
+EOI
+}
+
