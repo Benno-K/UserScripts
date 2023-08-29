@@ -48,7 +48,7 @@ while [ "${1:0:1}" = "-" ]
     shift
     continue
   fi
-  if [ "${1:0:2}" = "-h" ]; then
+  if [ "${candidate:0:2}" = "-h" ]; then
     cat <<EOI
 Usage:
 $0 [options] [YYYY-MM-DD]
@@ -182,11 +182,32 @@ if [ $complaints -gt 0 ]; then
 
 	# Matches track and zrackwithlog
 	if [ "${mode:0:5}" != "track" ];then
+    if [ "$cc" = "" ];then
+      ccoption=""
+    else
+#      ccoption='-a "Cc: '$cc'"'
+      ccoption='-a "Cc: Benno.Kardel@web.de"'
+    fi
+    # While trying to figure
+    # out how to omit the
+    # Cc-header in this command
+    # (in case $cc is undef.)
+    # I wasted hours and did 
+    # not find any solution.
+    # However it turned out,
+    # that the mail command is
+    # smart enough to ignore
+    # an empty Cc-header. So
+    # if $cc is undefined
+    # mail thankfully ignores
+    # a "Cc: " header. Saved
+    # by smarter programmer :-)
     cat <<EOI | \
 mail \
 -s "${fritzdate}: Störung$en meines DSL-Anschlusses - Kundennummer 2201954816" \
 -a "Sender: $sender" \
 -a "From: $from" \
+-a "Cc: $cc" \
 -a "Content-Type: text/plain; charset=utf-8" \
 $mailto 
 $(contractinfo)
