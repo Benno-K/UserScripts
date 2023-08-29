@@ -49,10 +49,10 @@ while [ "${1:0:1}" = "-" ]
     continue
   fi
   if [ "${candidate:0:2}" = "-h" ]; then
-    cat <<EOI
+    cat <<EOI|less
 Usage:
 $0 [options] [YYYY-MM-DD]
-  where YYYY-MM-DD specify
+  where YYYY-MM-DD specifies
   which day's log messages
   you want to be checked,
   defaults to yesterday.
@@ -68,7 +68,8 @@ $0 [options] [YYYY-MM-DD]
    -trackdir
       specify where
       trackfiles are stored
-   -thistoday use today as date
+   -today
+      use today as date
    -takelogfrombox
      retrieve log directly
      from FRITZ!box
