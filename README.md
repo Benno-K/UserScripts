@@ -99,5 +99,5 @@ before 2020 :-))
 
 ## fbdowntrack.personal-data.sample
 Sample to demonstrate the 
-setting that need to be 
+settings that need to be 
 incorporated for the mail
