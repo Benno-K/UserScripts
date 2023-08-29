@@ -96,3 +96,8 @@ Outputs something like
 (assuming you run it in autumn
 2022 and have now track-files
 before 2020 :-))
+
+## fbdowntrack.personal-data.sample
+Sample to demonstrate the 
+setting that need to be 
+incorporated for the mail
