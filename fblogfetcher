@@ -2,7 +2,7 @@
 export PATH=${HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 logdir=${HOME}/fblogs
-fbn=$logdir/fritzboxlog-all.txt
+fbn=$logdir/fblog-$(date +%Y).log
 
 # Log on to Fritzbox, get session id
 sid=$(fblogread -l)
