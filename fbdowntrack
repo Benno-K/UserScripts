@@ -1,9 +1,15 @@
 #!/bin/bash
 # Modes: mail,track,trackwithlog,both
 mode=mail
+# Read log from file or FB
 logfromfile=1
+# Source personal information
+# used for mailing provider
 personal=~/.fbdowntrack.personal-data
+# where to store track info
 trackdir=~/fblogs/tracked
+# search which (year's) log
+log2search="/home/pi/fblogs/fblog-$(date +%Y).log"
 
 # Source personal data here
 . $personal
@@ -23,12 +29,13 @@ while [ "${1:0:1}" = "-" ]
   candidate=$1
   toparse=$1
   shift
+  
   if [ "$candidate" == "-takelogfrombox" ]; then
     logfromfile=0
     continue
   fi
   if [ "$candidate" = "-today" ]; then
-    reportday="today"
+    reportday=$(date +%F)
     continue
   fi
   if [ "$candidate" = "-trackdir" ]; then
@@ -61,7 +68,7 @@ $0 [options] [YYYY-MM-DD]
    -trackdir
       specify where
       trackfiles are stored
-   -today use today as date
+   -thistoday use today as date
    -takelogfrombox
      retrieve log directly
      from FRITZ!box
@@ -80,6 +87,7 @@ if [ "$1" != "" ];then
   shift
 fi
 
+log2search="/home/pi/fblogs/fblog-$(date -d $reportday +%Y).log"
 #cat <<EOI
 ###DBG: debug exit
 #  mode=$mode
@@ -128,8 +136,8 @@ Bisherige Tickets:
 EOI
     cat $1
   fi
-  today=$(date +"%y%m%d")
-  printf "[Vorgang: %s-Kardel-%04d] (Ticket-ID noch nicht erhalten bzw. eingetragen)\n" $today $actual >> $1
+  thisday=$(date +"%y%m%d")
+  printf "[Vorgang: %s-Kardel-%04d] (Ticket-ID noch nicht erhalten bzw. eingetragen)\n" $thisday $actual >> $1
 }
 
 function logread {
@@ -139,13 +147,14 @@ function logread {
 function logreadfromfile {
         fritzdate=${1:8:2}.${1:5:2}.${1:2:2}
 	if [ "$1" != "" ];then
-          grep "^$fritzdate" /home/pi/fblogs/fritzboxlog-all.txt
+          grep "^$fritzdate" "$log2search"
 	else
 	  thisdate=$(date +"%d.%m.%y")
           fritzdate=${thisdate:8:2}.${thisdate:5:2}.${thisdate:2:2}
-          grep "^$(date -d $1 +'%d.%m.%y')" /home/pi/fblogs/fritzboxlog-all.txt
+          grep "^$(date -d $1 +'%d.%m.%y')" "$log2search"
 fi
 }
+
 if [ $logfromfile = 1 ];then
 	text=$(logreadfromfile $reportday|fbdowntimestat.pl)
 	complaints=$?
