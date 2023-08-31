@@ -1,0 +1,44 @@
+#!/bin/bash
+
+##
+#
+##
+
+# Script to incorporate some
+# info about the author, 
+# license, etc. into any other
+# script  That script must 
+# contain this:
+
+##
+#
+##
+
+# to indicate where the notice
+# is to be added
+
+function output {
+  let skip=0
+  exec 3<$1
+  CurrIFS="$IFS"
+  IFS= read -u 3 topline
+  # "IFS=" makes "read" read leading and trailing whitespace
+  echo $topline
+  while IFS= read -ru 3 line
+    do
+    if [ "${line}" = "##" ];then
+      let skip=$skip+1
+    fi
+    if [ $skip = 1 ]; then
+      continue
+    fi
+    if [ $skip = 2 ]; then
+      let skip=9
+      awk '{printf "# %s\n",$0}' copyright.txt
+      continue
+    fi
+    echo "$line"
+    done
+}
+output $1
+exit
