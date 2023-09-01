@@ -27,7 +27,6 @@ function output {
   # Generate Filename for
   # temoprary output file
   fn=$1.$$.crnupd.tmp
-  echo DBG:fn=$fn
 	exec 4>$fn
   let skipped=0
   let skip=0
