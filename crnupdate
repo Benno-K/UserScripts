@@ -13,36 +13,95 @@
 # license, etc. into any other
 # script  That script must 
 # contain this:
+# --- begin
+# ##
+# #
+# ##
+# --- end
 
-##
-#
-##
 
 # to indicate where the notice
 # is to be added
 
 function output {
+  # Generate Filename for
+  # temoprary output file
+  fn=$1.$$.crnupd.tmp
+  exec 4>$fn
+  let skipped=0
   let skip=0
   exec 3<$1
   CurrIFS="$IFS"
   IFS= read -u 3 topline
   # "IFS=" makes "read" read leading and trailing whitespace
-  echo $topline
+  echo $topline >&4
   while IFS= read -ru 3 line
     do
     if [ "${line}" = "##" ];then
       let skip=$skip+1
     fi
+#    echo skip=$skip >&2
     if [ $skip = 1 ]; then
+      let skipped=$skipped+1
       continue
     fi
     if [ $skip = 2 ]; then
-      let skip=9
-      awk '{printf "# %s\n",$0}' copyright.txt
+      let skipped=$skipped+1
+      echo "##" >&4
+      awk '{printf "# %s\n",$0}' copyright.txt >&4
+      echo "##" >&4
+      let skip=$skip+1
       continue
     fi
-    echo "$line"
+    if [ "${line}" != "##" ];then
+      echo "$line" >&4
+    fi
     done
+  crnlinecnt=$(wc -l copyright.txt | cut -d ' ' -f 1)
+  inplinecnt=$(wc -l $1 | cut -d ' ' -f 1)
+  outlinecnt=$(wc -l $fn | cut -d ' ' -f 1)
+  let cmp=$inplinecnt+$crnlinecnt-$skipped
+  if [ $cmp = $outlinecnt ];then
+    mode=$(stat -c %a $1)
+    mv $fn $1
+    chmod $mode $1
+#   would have used cat to
+#   move the file but doing so
+#   did not work if you ran it
+#   with itself, e. g.
+#   ,/crnupdste crnupdate
+#   because it modifies the
+#   running code which then
+#   fails
+  else
+    # if files are identical
+    # the notice was in it
+    # before, otherwise 
+    # something went wrong
+    #diff -q $fn $1
+    mode=$(stat -c %a $1)
+    mv $fn $1
+    chmod $mode $1
+#    if [ $? != 0 ];then
+#      echo "created file would have incorrect number of lines: check $fn"
+#      exit 10
+#    fi
+  fi
 }
-output $1
+
+if [ "$1" = "" ]; then
+  cat <<EOI
+Usage: $0 filename [ filename ... }
+EOI
+  exit 7
+fi
+
+force=0
+if [ "$1" = "-force" ]; then
+  force=1
+fi
+while [ "$1" != "" ]; do
+  output $1
+  shift
+done
 exit
