@@ -74,6 +74,20 @@ the contents of the credentials file (~/,fböogcred.logfetch) which
 contains the crypted password
 of the non-privileged account
 
+## crnupdate
+Incorporate or update the file
+copyright.txt into a 
+shell-script. The script
+must include thr lined
+
+##
+#
+##
+
+
+which will be replaced by the 
+content of copyright.txt
+
 ## fbdownstats
 Create a statistic out of
 the track-files that 
