@@ -78,12 +78,11 @@ of the non-privileged account
 Incorporate or update the file
 copyright.txt into a 
 shell-script. The script
-must include thr lined
+must include the lines
 
-##
-#
-##
-
+	##
+	#
+	##
 
 which will be replaced by the 
 content of copyright.txt
