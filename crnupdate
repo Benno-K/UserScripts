@@ -1,5 +1,6 @@
 #!/bin/bash
 
+##
 # Author: Benno K.
 # Email: perlfan@freakmail.de
 # Github: https://www.github.com/Benno-K
@@ -7,6 +8,7 @@
 # This script is available for
 # public use under GPL V3 (see
 # file LICENSE)
+##
 
 # Script to incorporate some
 # info about the author, 
@@ -37,13 +39,12 @@ function output {
   echo $topline >&4
   while IFS= read -ru 3 line
     do
-    if [ "${line}" = "##" ];then
-      let skip=$skip+1
-    fi
-#    echo skip=$skip >&2
+    if [ $force = 1 ]; then
+			force=0
+			let skip=2
+		fi
     if [ $skip = 1 ]; then
       let skipped=$skipped+1
-      continue
     fi
     if [ $skip = 2 ]; then
       let skipped=$skipped+1
@@ -98,6 +99,7 @@ fi
 
 force=0
 if [ "$1" = "-force" ]; then
+	shift
   force=1
 fi
 while [ "$1" != "" ]; do
