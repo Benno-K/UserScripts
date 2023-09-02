@@ -86,7 +86,7 @@ must include the lines
 
 which will be replaced by the 
 content of copyright.txt
-
+(**crn** stands for **c**opy**r**ight **n**otice)
 
 ## fbdownstats
 Create a statistic out of
