@@ -1,4 +1,4 @@
-# UserScripts
+# User-Scripts
 Collection of scripts to be run from
 the users ~/bin/ directory.
 
