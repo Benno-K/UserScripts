@@ -2,7 +2,7 @@
 Collection of scripts to be run from
 the users ~/bin/ directory.
 Usually they do not require
-special permississions.
+special permissions.
 
 ## crnupdate
 Incorporate or update the file
