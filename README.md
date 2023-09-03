@@ -1,6 +1,8 @@
 # User-Scripts
 Collection of scripts to be run from
 the users ~/bin/ directory.
+Usually they do not require
+special permississions.
 
 ## crnupdate
 Incorporate or update the file
