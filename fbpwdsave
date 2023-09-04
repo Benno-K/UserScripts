@@ -3,7 +3,7 @@ if [ "$1" = "" ];then
   read -p "Output file: " cfil
 else
   cfil="$1"
-#i
+fi
 . ~/.fblogsrc
 read -s -p "?: " word
 echo -n  "$word"|ccencrypt -K "$keycc" > $cfil
