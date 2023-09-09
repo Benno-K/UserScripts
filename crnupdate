@@ -1,15 +1,5 @@
 #!/bin/bash
 
-##
-# Author: Benno K.
-# Email: perlfan@freakmail.de
-# Github: https://www.github.com/Benno-K
-# 
-# This script is available for
-# public use under GPL V3 (see
-# file LICENSE)
-##
-
 # Script to incorporate some
 # info about the author, 
 # license, etc. into any other
@@ -24,6 +14,16 @@
 
 # to indicate where the notice
 # is to be added
+
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
 
 function output {
   # Generate Filename for
