@@ -1,4 +1,19 @@
 #!/bin/bash
+# Fetch log messages from a
+# FRITZ!box and append them
+# to a textfile. Uses script
+# fblogread.
+
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
+
 export PATH=${HOME}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 logdir=${HOME}/fblogs
