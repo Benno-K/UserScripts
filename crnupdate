@@ -92,16 +92,26 @@ function output {
 
 if [ "$1" = "" ]; then
   cat <<EOI
-Usage: $0 filename [ filename ... }
+Usage: $0 [-f] filename [ filename ... }
+    -f  force insertion if
+		    you want to overwrite
+				existing copyright
+				notice
 EOI
   exit 7
 fi
 
 force=0
-if [ "$1" = "-force" ]; then
+while getopts "f" curopt
+	do
+	case "$curopt" in
+		f)
+			force=1
+			;;
+		esac
 	shift
-  force=1
-fi
+	done
+
 while [ "$1" != "" ]; do
   output $1
   shift
