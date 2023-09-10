@@ -1,4 +1,14 @@
 #!/bin/bash
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
+
 # Modes: mail,track,trackwithlog,both
 mode=mail
 # Read log from file or FB

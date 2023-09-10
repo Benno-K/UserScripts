@@ -2,6 +2,10 @@
 
 # Create statistics of outagescollected by fbdowntrack
 
+##
+#
+##
+
 # where fbdowntrack stores the results
 statdir=~/fblogs/tracked
 
