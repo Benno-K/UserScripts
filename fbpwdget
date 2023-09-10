@@ -1,4 +1,13 @@
 #!/bin/bash
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
 if [ "$1" = "" ];then
   read -p "Input file: " cfil
 else
