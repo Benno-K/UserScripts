@@ -17,7 +17,15 @@
 #   5: HTTP fetch failed
 #   6: Data received has unexpected format
 
-# Author: perlfan@freakmail.de
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
 my $version="1.0-001";
 
 # Change the following three variables for your FRITZ!Box
