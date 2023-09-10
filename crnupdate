@@ -10,20 +10,23 @@
 # #
 # ##
 # --- end
-
-
 # to indicate where the notice
 # is to be added
 
 ##
-# Author: Benno K.
-# Email: perlfan@freakmail.de
-# Github: https://www.github.com/Benno-K
-# 
-# This script is available for
-# public use under GPL V3 (see
-# file LICENSE)
+#
 ##
+
+function usage () {
+  cat <<EOI
+Usage: $0 [-i] filename [ filename ... }
+    -i  force insertion at
+        line #2, no matter
+        what the file contents
+        are.
+EOI
+  exit $1
+}
 
 function output {
   # Generate Filename for
@@ -52,10 +55,15 @@ function output {
       awk '{printf "# %s\n",$0}' copyright.txt >&4
       echo "##" >&4
       let skip=$skip+1
+      echo "$line" >&4
       continue
     fi
     if [ "${line}" != "##" ];then
-      echo "$line" >&4
+			if [ $skip != 1 ]; then
+        echo "$line" >&4
+			fi
+		else
+		  let skip=$skip+1
     fi
     done
   crnlinecnt=$(wc -l copyright.txt | cut -d ' ' -f 1)
@@ -90,27 +98,23 @@ function output {
   fi
 }
 
-if [ "$1" = "" ]; then
-  cat <<EOI
-Usage: $0 [-f] filename [ filename ... }
-    -f  force insertion if
-		    you want to overwrite
-				existing copyright
-				notice
-EOI
-  exit 7
-fi
-
 force=0
-while getopts "f" curopt
+while getopts "i" curopt
 	do
 	case "$curopt" in
-		f)
+		i)
 			force=1
 			;;
 		esac
 	shift
 	done
+if [ $? != 0 ]; then
+  usage 3
+fi
+
+if [ $# = 0 ]; then
+	usage 2
+fi
 
 while [ "$1" != "" ]; do
   output $1
