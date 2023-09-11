@@ -4,6 +4,15 @@ the users ~/bin/ directory.
 Usually they do not require
 special permissions.
 
+## bootcheck
+Check if the system has been
+rebooted since last check.
+Intended to run frequently
+by cron (e. g. every 15 mins)
+Sends a mail to whichever
+mail address is hardcoded
+into script. Default is $USER.
+
 ## crnupdate
 Incorporate or update the file
 copyright.txt into a 

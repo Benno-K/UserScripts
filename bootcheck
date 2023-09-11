@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Check for reboot, mail if
+# reboot detected
+
+mailto=$USER
+
+##
+# Author: Benno K.
+# Email: perlfan@freakmail.de
+# Github: https://www.github.com/Benno-K
+# 
+# This script is available for
+# public use under GPL V3 (see
+# file LICENSE)
+##
+
+ltimstore=~/.$(basename $0).ltimstore
+
+uptim=$(cut -d. -f1 /proc/uptime)
+
+if [ ! -r "$ltimstore" ]; then
+	echo "$uptim" > "$ltimstore"
+	exit
+fi
+
+luptim=$(cat "$ltimstore")
+uptim=$(cut -d. -f1 /proc/uptime)
+echo "$uptim" > "$ltimstore"
+if [ $luptim -gt $uptim ]; then
+	mail -s "SYSTEM $(hostname) HAS BEEN BOOTED!" $mailto <<EOI
+SYSTEM $(hostname) HAS BEEN BOOTED!
+Uptime at$(uptime)
+EOI
+fi
+exit
