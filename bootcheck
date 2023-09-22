@@ -41,7 +41,6 @@ luptim=$(cat "$ltimstore")
 uptim=$(cut -d. -f1 /proc/uptime)
 echo "$uptim" > "$ltimstore"
 if [ $luptim -gt $uptim ]; then
-	set -x
 	mail -s "SYSTEM $(hostname) HAS BEEN BOOTED!" $mailto <<EOI
 SYSTEM $(hostname) HAS BEEN BOOTED!
 Uptime at$(uptime)
