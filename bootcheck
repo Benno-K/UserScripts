@@ -3,7 +3,14 @@
 # Check for reboot, mail if
 # reboot detected
 
-mailto=$USER
+if [ "$USER" == "" ]; then
+	# When run by cron $USER
+	# is not set but 
+	# $LOGNAME is
+	mailto=$LOGNAME
+else
+  mailto=$USER
+fi
 
 ##
 # Author: Benno K.
@@ -17,6 +24,12 @@ mailto=$USER
 
 ltimstore=~/.$(basename $0).ltimstore
 
+if [ "$1" == "-t" ]; then
+	sed -e 's/^/1/g' -i $ltimstore
+	echo ok
+	exit
+fi
+
 uptim=$(cut -d. -f1 /proc/uptime)
 
 if [ ! -r "$ltimstore" ]; then
@@ -28,6 +41,7 @@ luptim=$(cat "$ltimstore")
 uptim=$(cut -d. -f1 /proc/uptime)
 echo "$uptim" > "$ltimstore"
 if [ $luptim -gt $uptim ]; then
+	set -x
 	mail -s "SYSTEM $(hostname) HAS BEEN BOOTED!" $mailto <<EOI
 SYSTEM $(hostname) HAS BEEN BOOTED!
 Uptime at$(uptime)
