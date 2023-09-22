@@ -2,6 +2,8 @@ TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave fbdo
 UBINDIR = ~/bin/
 all: $(TARGETS)
 	install -m 755 -t $(UBINDIR) $(TARGETS)
+copyright: $(TARGETS)
+	crnupdate $(TARGETS)
 usage:
 	@echo "please use"
 	@echo "  make fritz"
