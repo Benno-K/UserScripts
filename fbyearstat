@@ -1,0 +1,228 @@
+#!/bin/bash
+
+bn=$(basename $0)
+
+usage () {
+  if [ $1 -gt 0 ]; then
+    outto=2
+   else
+     outto=1
+  fi
+  cat <<EOI >&$outto
+ Usage $0 [option [option]] [output file basename]
+  Options:
+    -fmt
+   format of output file(s)
+	 supported values:
+    gif eps pdf png svg
+		html creates a canvas,
+		but nothing is shown
+  -h -help --help
+   display usage info
+    -log
+   use logarithmic scale for time values
+    -nophone
+   don't show phone number
+    -v
+   verbose
+    repeat to increase verbosity
+    -ymax
+   set maximum time value
+EOI
+  if [ $1 == 0 ]; then
+  cat <<EOI >&$outto
+  Synopsis:
+   $bn uses the logfiles of
+   a FRITZ!box collected by
+   fblogfetch to create a
+   diagram showing the 
+   incidents per year
+EOI
+ fi
+  exit $1
+}
+
+bn=$(basename $0)
+tn="${HOME}/.$bn"
+f1="$tn-XXXXXX-outage.tmp"
+f2="$tn-XXXXXX-lowrate.tmp"
+verbose=0
+allargs="$@"
+oformat="png"
+fontname="Calibra"
+rgbout="red"
+rgbslow="orange"
+phoneinfo="${HOME}/.${bn}.phone"
+if [ -r $phoneinfo ]; then
+	phone=$(cat $phoneinfo)
+else
+	phone=""
+fi
+while [ "${1:0:1}" == "-" ]
+do
+	if [ "$1" == "-nophone" ];then
+		shift
+		phone=""
+		continue
+	fi
+	if [ "$1" == "-v" ];then
+		shift
+	  ((verbose++))
+		continue
+	fi
+	if [ "$1" == "-log" ];then
+		shift
+		scalecmd="set logscale y"
+  	ylabeladd=' (logarithmische Skala!)'
+		continue
+	fi
+	if [[ $1 =~ ^-[h\-][help]*$ ]];then
+		usage 0
+	fi
+	if [ "$1" == "-fmt" ];then
+		# As soon as -fmt is
+		# present the first time
+		# ALL wanted formats need
+		# to be specified -fmt!
+		# otherwise we would ALWAYS
+		# create a png
+		if [ "$oformat" = "png" ]; then
+			oformat=""
+		fi
+		shift
+		if [[ $1 =~ "," ]]; then
+			oformat=$(echo $1|sed -e 's/,/ /g')
+		else
+		  oformat="$oformat$1 "
+		fi
+		shift
+		continue
+	fi
+	if [ "$1" == "-outcol" ];then
+		shift
+	  rgbout="$1"
+		shift
+		continue
+	fi
+	if [ "$1" == "-slowcol" ];then
+		shift
+	  rgbslow="$1"
+		shift
+		continue
+	fi
+	if [ "$1" == "-ymax" ];then
+		shift
+		$scalecmd="set yrange [0:$ylimit]"
+		shift
+		continue
+	fi
+	echo >&2 "Illegal option: $1 ($bn -h for help)"
+	exit 2
+done
+
+of1=$(mktemp "$f1")
+of2=$(mktemp "$f2")
+miny=$(echo fblogs/fblog-20*.log| cut -d" " -f1|cut -d- -f2|cut -d. -f1)
+if [ "$2" != "" ]; then
+	miny=$2
+fi
+maxv=0
+cnt=0
+for ((y = $miny ; y <= $(date +%Y) ; y++ ))
+do
+	((cnt++))
+	v=$(timadd -s $y)
+	if [ $v -gt $maxv ]; then
+		maxv=$v
+	fi
+	values="$values$v "
+	((y--))
+	echo -n "$y.75 " >>$of1
+	((y++))
+	echo $v >>$of1
+	lv=$v
+	v=$(timadd -s -l $y)
+	if [ $v -gt $maxv ]; then
+		maxv=$v
+	fi
+	tv=$((lv+v))
+	values="$values$tv "
+	((cnt++))
+	echo -n "$y.25 " >>$of2
+	echo $v >>$of2
+done
+
+if [ "$scalecmd" == "" ]; then
+  ((ylimit=maxv+maxv/3)) #+33%
+	scalecmd="set yrange [0:$ylimit]"
+fi
+
+if [ "$1" == "" ]; then
+	read -p "Output file basename: " ofbn
+else
+  ofbn=$1
+fi
+outfilnam="$ofbn-$miny-$((y-1))"
+maxy=$y
+((miny--))
+if [ $verbose -gt 0 ]; then
+	echo 2>&1 "scaling with: $scalecmd"
+fi
+if [ $verbose -gt 0 ]; then
+	echo oformat=$oformat
+fi
+keytitle="Erstellt: $(date +%d.%m.%Y) $(date +%H:%M:%S)\n mit '$bn' durch gnuplot"
+for of in $oformat
+do
+	term=$of
+	if [ "$of" == "html" ]; then
+		term="canvas"
+	fi
+	if [ "$of" == "eps" ]; then
+		term="epscairo"
+	fi
+	if [ "$of" == "png" ]; then
+		term="pngcairo"
+	fi
+  echo $outfilnam.$of
+
+  gnuplot <<EOI
+set title "Ausfälle DSL-Anschluß $phone"
+set key title "$keytitle"
+set title font "$fontname,18"
+set key title font '$fontname,8'
+set xlabel 'Jahr'
+set ylabel 'Minuten/Jahr$ylabeladd'
+set xrange [$miny:$maxy]
+set xtics out rotate by 45 offset -2.5,-1.2
+set ytics out rotate by 45
+set size square
+set boxwidth 0.40 relative
+$scalecmd
+set style fill solid 1.0 border 0.1
+set terminal $term
+set output "${outfilnam}.$of"
+plot "$of1" \
+t "Keine DSL Verbindung" w boxes fc rgb "$rgbout", \
+"$of2" \
+t "DSL zu langsam" w boxes fc rgb "$rgbslow"
+EOI
+done
+
+showfiles () {
+##read -p $of2 void
+#less $of1
+#less $of2
+#grep 2018 $of1 $of2
+#grep 2019 $of1 $of2
+#grep 2020 $of1 $of2
+#grep 2021 $of1 $of2
+#grep 2022 $of1 $of2
+#grep 2023 $of1 $of2
+echo -n ""
+}
+showfiles
+
+rm $of1
+rm $of2
+exit
