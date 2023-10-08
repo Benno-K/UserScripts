@@ -1,5 +1,6 @@
 #!/bin/bash
-
+echo this version can kill input file - exiting
+exit 777
 # Script to incorporate some
 # info about the author, 
 # license, etc. into any other
