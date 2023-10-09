@@ -21,6 +21,14 @@ usage () {
    display usage info
     -log
    use logarithmic scale for time values
+	  -narrow
+		 Display range from start-
+		 year to end-year instead
+		 from start-year -1 to
+	   end-year +1,
+		 If values for rate or
+		 outage are zero, the
+		 years get narrow
     -nophone
    don't show phone number
     -v
@@ -52,6 +60,7 @@ oformat="png"
 fontname="Calibra"
 rgbout="red"
 rgbslow="orange"
+displaymode=0
 phoneinfo="${HOME}/.${bn}.phone"
 if [ -r $phoneinfo ]; then
 	phone=$(cat $phoneinfo)
@@ -63,6 +72,11 @@ do
 	if [ "$1" == "-nophone" ];then
 		shift
 		phone=""
+		continue
+	fi
+	if [ "$1" == "-narrow" ];then
+		shift
+	  ((displaymode++))
 		continue
 	fi
 	if [ "$1" == "-v" ];then
@@ -116,7 +130,7 @@ do
 		shift
 		continue
 	fi
-	echo >&2 "Illegal option: $1 ($bn -h for help)"
+	echo >&2 "Illegal option: $1  - see $bn -h for help"
 	exit 2
 done
 
@@ -163,8 +177,21 @@ else
   ofbn=$1
 fi
 outfilnam="$ofbn-$miny-$((y-1))"
+
+# Either display from start-
+# year -1 to end-year +1
+# or from start to end which
+# can result in narrow year
+# columns if one of lowrate
+# or outage minutes are zero
+if [ $displaymode == 0 ]; then
+  ((miny--))
+else
+  ((y--))
+fi
+
 maxy=$y
-((miny--))
+
 if [ $verbose -gt 0 ]; then
 	echo 2>&1 "scaling with: $scalecmd"
 fi
