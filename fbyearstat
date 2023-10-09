@@ -198,7 +198,7 @@ fi
 if [ $verbose -gt 0 ]; then
 	echo oformat=$oformat
 fi
-keytitle="Erstellt: $(date +%d.%m.%Y) $(date +%H:%M:%S)\n mit '$bn' durch gnuplot"
+keytitle="Erstellt: $(date +%d.%m.%Y) $(date +%H:%M:%S)\n mit $bn durch gnuplot"
 for of in $oformat
 do
 	term=$of
