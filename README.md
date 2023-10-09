@@ -77,6 +77,13 @@ Outputs something like
 2022 and have now track-files
 before 2020 :-))
 
+## fbyearstat
+Takes all (or selected)
+FRITZBOX!box log files to
+create charts showing downtimes
+and times of lowered speed of
+the DSL-connection.
+
 ## fbdowntrack.personal-data.sample
 Sample to demonstrate the 
 settings that need to be 
