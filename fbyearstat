@@ -9,7 +9,7 @@ usage () {
      outto=1
   fi
   cat <<EOI >&$outto
- Usage $0 [option [option]] [output file basename]
+ Usage $0 [option [option]] [output file basename] [start-year]
   Options:
     -fmt
    format of output file(s)
