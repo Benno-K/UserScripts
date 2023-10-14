@@ -1,7 +1,16 @@
-TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave fbdownstats crnupdate bootcheck
+SHELL = /bin/bash
+TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave fbdownstats crnupdate bootcheck fbyearstat
 UBINDIR = ~/bin/
 all: $(TARGETS)
-	install -m 755 -t $(UBINDIR) $(TARGETS)
+	@for n in $(TARGETS);\
+	do \
+	diff -q $$n $(UBINDIR)/$$n > /dev/null;\
+	if [ "$$?" != "0"	];then \
+	   echo install -m 755 -t $(UBINDIR) $$n;\
+	   install -m 755 -t $(UBINDIR) $$n;\
+	fi;\
+	done
+
 copyright: $(TARGETS)
 	crnupdate $(TARGETS)
 usage:
