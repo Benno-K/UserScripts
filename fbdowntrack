@@ -72,7 +72,7 @@ $0 [options] [YYYY-MM-DD]
       specify one of 
         both
         track
-	trackwithlog
+       	trackwithlog
         mail
      defaults to both
    -trackdir
