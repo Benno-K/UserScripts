@@ -26,7 +26,7 @@ log2search="/home/pi/fblogs/fblog-$(date +%Y).log"
 
 # Make sure German umlauts get a usable encoding
 export LANG=POSIX
-#export LC_CTYPE=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
 
 reportday=$(date -d yesterday +%F)
 while [ "${1:0:1}" = "-" ]
@@ -142,7 +142,7 @@ function priortext {
     let actual=$priorcount+1
     cat <<-EOI
 
-Dies ist die $actual. Störung seit dem $firstdate.
+Dies ist die $actual. StÃ¶rung seit dem $firstdate.
 Bisherige Tickets:
 EOI
     cat $1
@@ -175,11 +175,13 @@ else
 fi
 
 if [ $complaints -gt 0 ]; then
-	# Störung or Störungen / trat or traten
+	# StÃ¶rung or StÃ¶rungen / trat or traten
   if [ $complaints -gt 1 ]; then
     en="en"
+		ee="e"
   else
     en=""
+		ee=""
   fi
   set 2>&1 > /tmp/fbset.log
   thisdate=$(date +"%d.%m.%y")
@@ -188,7 +190,7 @@ if [ $complaints -gt 0 ]; then
   else
     fritzdate=${reportday:8:2}.${reportday:5:2}.${reportday:2:2}
   fi
-# Für CC unten einfügen
+# FÃ¼r CC unten einfÃ¼gen
 #-a "Cc: $from" \
 
 	# Matches track and zrackwithlog
@@ -214,23 +216,25 @@ if [ $complaints -gt 0 ]; then
     # a "Cc: " header. Saved
     # by smarter programmer :-)
     cat <<EOI | \
+# CAUTION: subject MUST NOT
+# contain any 8-bit characters
 mail \
--s "${fritzdate}: Störung$en meines DSL-Anschlusses - Kundennummer 2201954816" \
+-s "${fritzdate}: Problem$ee mit meinem DSL-Anschluss - Kundennummer 2201954816=" \
 -a "Sender: $sender" \
 -a "From: $from" \
 -a "Cc: $cc" \
--a "Content-Type: text/plain; charset=iso-8859-16" \
+-a "Content-Type: text/plain; charset=utf-8" \
 $mailto 
 $(contractinfo)
 
 Sehr geehrte Damen und Herren,
 
-an meinem DSL-Anschluss trat$en folgende Störung$en auf:
+an meinem DSL-Anschluss trat$en folgende StÃ¶rung$en auf:
 $text
 $(priortext $priortickets)
 $remarks
 
-Mit freundlichen Grüßen
+Mit freundlichen GrÃ¼ÃŸen
 Benno Kardel
 
 PS.: Hier die FRITZbox Logdatei
@@ -240,7 +244,7 @@ PPS.:  Diese E-Mail wurde automatisch erstellt.
 EOI
   else
     cat <<EOI > $tracklog
-${fritzdate}: Störung$en meines DSL-Anschlusses
+${fritzdate}: StÃ¶rung$en meines DSL-Anschlusses
 $text
 $(priortext $priortickets)
 $remarks
