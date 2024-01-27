@@ -215,9 +215,9 @@ if [ $complaints -gt 0 ]; then
     # mail thankfully ignores
     # a "Cc: " header. Saved
     # by smarter programmer :-)
-    cat <<EOI | \
 # CAUTION: subject MUST NOT
 # contain any 8-bit characters
+    cat <<EOI | \
 mail \
 -s "${fritzdate}: Problem$ee mit meinem DSL-Anschluss - Kundennummer 2201954816=" \
 -a "Sender: $sender" \
