@@ -230,9 +230,7 @@ $(contractinfo)
 Sehr geehrte Damen und Herren,
 
 an meinem DSL-Anschluss trat$en folgende Störung$en auf:
-$text
-$(priortext $priortickets)
-$remarks
+$text $(priortext $priortickets) $remarks
 
 Mit freundlichen Grüßen
 Benno Kardel
@@ -245,9 +243,7 @@ EOI
   else
     cat <<EOI > $tracklog
 ${fritzdate}: Störung$en meines DSL-Anschlusses
-$text
-$(priortext $priortickets)
-$remarks
+$text $(priortext $priortickets) $remarks
 EOI
     if [ "$includelog" = "1" ];then
       cat <<EOI >> $tracklog
