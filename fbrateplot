@@ -1,7 +1,6 @@
 #!/bin/bash
 
-bn=$(basename $0)
-
+# Help text
 usage () {
   if [ $1 -gt 0 ]; then
     outto=2
@@ -21,9 +20,6 @@ usage () {
    display usage info
     -log
    use logarithmic scale for time values
-  -v
-   verbose
-    repeat to increase verbosity
 	-rgbup <color>
 	-rgbdown <color>
 		specify gnuplot rgb color
@@ -38,30 +34,32 @@ EOI
    a FRITZ!box collected by
    fblogfetch to create a
    diagram showing the 
-   incidents per year
+   data rates over the year.
 EOI
  fi
   exit $1
 }
 
+# What is our name?
 bn=$(basename $0)
+
+# name for temporary file
 tn="${HOME}/.$bn"
 fn="$tn-XXXXXX-rate.tmp"
-verbose=0
-allargs="$@"
+
+# default output format
 oformat="png"
+
+# font used for annotations
 fontname="Calibra"
+
+# colors for boxes of up-/downstream
 rgbdown="#99ccff"
 rgbup="#ff9933"
-displaymode=0
 
+# parse commamd line 
 while [ "${1:0:1}" == "-" ]
 do
-	if [ "$1" == "-v" ];then
-		shift
-	  ((verbose++))
-		continue
-	fi
 	if [ "$1" == "-log" ];then
 		shift
 		scalecmd="set logscale y"
@@ -105,22 +103,25 @@ do
 	exit 2
 done
 
+# get 2-digit year of 1.st line
 yearinfile="$(head -1 $2|cut -d. -f3)"
 yearinfile=${yearinfile:0:4}
-echo $yearinfile
+
+# create a tempfile for input
 of1=$(mktemp "$fn")
 
+# basename fog all output files
 if [ "$1" == "" ]; then
 	read -p "Output file basename: " ofbn
 else
   ofbn=$1
 fi
-outfilnam="$ofbn"
 
-if [ $verbose -gt 0 ]; then
-	echo oformat=$oformat
-fi
-keytitle="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit $bn durch gnuplot"
+stamp="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit $bn durch gnuplot"
+
+# for the formats not directly
+# corresponding to the terminal
+# type, set it
 for of in $oformat
 	do
 	term=$of
@@ -133,54 +134,116 @@ for of in $oformat
 	if [ "$of" == "png" ]; then
 		term="pngcairo"
 	fi
+
+	# add headers to datafile
   tmp=$(mktemp ~/.$bn-XXXXXX.tmp)
 	echo '"Zeit";"downstream";"upstream"' > $tmp
+
+	# copy data to datafile
   cat $2 >> $tmp
-	echo $outfilnam.$of
+
+	# tell outputfile
+	echo $ofbn.$of
+
+	# get 2-year digits from
+	# filename
 	opos=${#ofbn}
 	((opos=$opos-4))
 	tyear=${ofbn:$opos}
+
+	# now plot
   gnuplot <<EOI
+# make month name abbr. German
+# im x-axis annotation
 set locale "de_DE.UTF-8"
+
+# make a horizontal, dark grid
+# in front of all other objects
 set grid ytics layerdefault front lt 1 lc rgb "#999966"
+
+# make the legend (called key
+# in gnuplot)
+# arrrange vertically, symbol
+# before text, position will
+# define the left side of the
+# legend, coordinates are 
+# relative to graph, set font,
+# left align legend title,
+# define title text, set key
+# title font
 set key vertical reverse
 set key at graph 0.27,-0.14 right
 set key title font "$fontname,8"
-set keytitle left
+set key title left
 set key title "Übertragungsrichtung"
 set key font "$fontname,8"
+
+# the title of the graph
+# including year in smaller
+# font
 set title font "$fontname,22"
 set title "DSL Geschwindigkeit  {/*0.6 $tyear}"
+
+# fineprint info about the
+# graph as vertical label
 set label font "$fontname,6" rotate by -90
-set label 1 "$keytitle" at graph 1.02,0.5 center
+set label 1 "$stamp" at graph 1.02,0.5 center
+
+# axis labelling
 set xlabel 'Monat' font "$fontname,12" 
 set ylabel 'Datenrate  {/*0.5 Kbit/s}' font "$fontname,12" offset -0.8,0
+
+# show only bottom and left
+# axis ticks
 set xtics out font "$fontname,10" nomirror
 set ytics out rotate by 45 scale 1.6 nomirror
+
+# make it a 16:9 horizontal
+# graph ( so divide 9 by 16 )
 set size ratio 0.56
+
+# make the boxes fill the
+# whole x-axis
 set boxwidth 1.0 relative
+
+# set logarithmic scale if
+# requested by -log
 $scalecmd
+
+# fill the whole box with
+# color
 set style fill solid 1.0 border 0.1
-set terminal $term
-set output "${outfilnam}.$of"
+
+# expect ;-separated CSV-input
 set datafile separator ';'
-set style fill solid 2.0 border 0.1
+
+# set output type and filename
+set terminal $term
+set output "${ofbn}.$of"
+
+# x-data are time-values, use
+# localized abbreviated month
+# on axis
 set xdata time
 set timefmt "%d.%m.%y %H:%M:%S"
 set format x "%b"
-#maxx=GPVAL_Y_MAX*1.15
-#show variables maxx
+
+# ensure the graph expands to
+# the while even if there is
+# data missing 
 set xrange ["01.01.$yearinfile":"31.12.$yearinfile"]
+
+# set the boxes colors
 set lt 1 lc rgb "$rgbdown"
 set lt 2 lc rgb "$rgbup"
+
+# finally plot the whole shit
+# using the first data line
+# as column headers
 plot for [i=2:3] "$tmp" using 1:i title columnhead(i) w boxes
-#show variables GPVAL
-#maxx=GPVAL_Y_MAX*1.15
-#show variables maxx
-#set yrange [*:maxx]
-#replot
-#save "lastplot.p"
 EOI
-	done
+	done # for this $of
+
+# kill tempfile
 rm -f $tmp
 exit
