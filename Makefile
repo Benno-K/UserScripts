@@ -1,5 +1,5 @@
 SHELL = /bin/bash
-TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave fbdownstats crnupdate bootcheck fbyearstat fbdowntimestat.pl
+TARGETS = extipmailer fbdowntrack fblogfetcher fblogread fbpwdget fbpwdsave fbdownstats crnupdate bootcheck fbyearstat fbdowntimestat.pl fbrateplot fbratestat
 UBINDIR = ~/bin/
 all: $(TARGETS)
 	@for n in $(TARGETS);\
