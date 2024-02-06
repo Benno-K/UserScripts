@@ -1,0 +1,186 @@
+#!/bin/bash
+
+bn=$(basename $0)
+
+usage () {
+  if [ $1 -gt 0 ]; then
+    outto=2
+   else
+     outto=1
+  fi
+  cat <<EOI >&$outto
+ Usage $0 [option [option]] [output file basename] [year]
+  Options:
+  -fmt
+   format of output file(s)
+	 supported values:
+    gif eps pdf png svg
+		html creates a canvas,
+		but nothing is shown
+  -h -help --help
+   display usage info
+    -log
+   use logarithmic scale for time values
+  -v
+   verbose
+    repeat to increase verbosity
+	-rgbup <color>
+	-rgbdown <color>
+		specify gnuplot rgb color
+		for upstream and downstrean
+		boxes (e.g. red, #ff0000
+		etc.)
+EOI
+  if [ $1 == 0 ]; then
+  cat <<EOI >&$outto
+  Synopsis:
+   $bn uses the logfiles of
+   a FRITZ!box collected by
+   fblogfetch to create a
+   diagram showing the 
+   incidents per year
+EOI
+ fi
+  exit $1
+}
+
+bn=$(basename $0)
+tn="${HOME}/.$bn"
+fn="$tn-XXXXXX-rate.tmp"
+verbose=0
+allargs="$@"
+oformat="png"
+fontname="Calibra"
+rgbdown="#99ccff"
+rgbup="#ff9933"
+displaymode=0
+
+while [ "${1:0:1}" == "-" ]
+do
+	if [ "$1" == "-v" ];then
+		shift
+	  ((verbose++))
+		continue
+	fi
+	if [ "$1" == "-log" ];then
+		shift
+		scalecmd="set logscale y"
+		continue
+	fi
+	if [[ $1 =~ ^-[h\-][help]*$ ]];then
+		usage 0
+	fi
+	if [ "$1" == "-fmt" ];then
+		# As soon as -fmt is
+		# present the first time
+		# ALL wanted formats need
+		# to be specified -fmt!
+		# otherwise we would ALWAYS
+		# create a png
+		if [ "$oformat" = "png" ]; then
+			oformat=""
+		fi
+		shift
+		if [[ $1 =~ "," ]]; then
+			oformat=$(echo $1|sed -e 's/,/ /g')
+		else
+		  oformat="$oformat$1 "
+		fi
+		shift
+		continue
+	fi
+	if [ "$1" == "-rgbup" ];then
+		shift
+	  rgbup="$1"
+		shift
+		continue
+	fi
+	if [ "$1" == "-rgbdown" ];then
+		shift
+	  rgbdown="$1"
+		shift
+		continue
+	fi
+	echo >&2 "Illegal option: $1  - see $bn -h for help"
+	exit 2
+done
+
+yearinfile="$(head -1 $2|cut -d. -f3)"
+yearinfile=${yearinfile:0:4}
+echo $yearinfile
+of1=$(mktemp "$fn")
+
+if [ "$1" == "" ]; then
+	read -p "Output file basename: " ofbn
+else
+  ofbn=$1
+fi
+outfilnam="$ofbn"
+
+if [ $verbose -gt 0 ]; then
+	echo oformat=$oformat
+fi
+keytitle="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit $bn durch gnuplot"
+for of in $oformat
+	do
+	term=$of
+	if [ "$of" == "html" ]; then
+		term="canvas"
+	fi
+	if [ "$of" == "eps" ]; then
+		term="epscairo"
+	fi
+	if [ "$of" == "png" ]; then
+		term="pngcairo"
+	fi
+  tmp=$(mktemp ~/.$bn-XXXXXX.tmp)
+	echo '"Zeit";"downstream";"upstream"' > $tmp
+  cat $2 >> $tmp
+	echo $outfilnam.$of
+	opos=${#ofbn}
+	((opos=$opos-4))
+	tyear=${ofbn:$opos}
+  gnuplot <<EOI
+set locale "de_DE.UTF-8"
+set grid ytics layerdefault front lt 1 lc rgb "#999966"
+set key vertical reverse
+set key at graph 0.27,-0.14 right
+set key title font "$fontname,8"
+set keytitle left
+set key title "Übertragungsrichtung"
+set key font "$fontname,8"
+set title font "$fontname,22"
+set title "DSL Geschwindigkeit  {/*0.6 $tyear}"
+set label font "$fontname,6" rotate by -90
+set label 1 "$keytitle" at graph 1.02,0.5 center
+set xlabel 'Monat' font "$fontname,12" 
+set ylabel 'Datenrate  {/*0.5 Kbit/s}' font "$fontname,12" offset -0.8,0
+set xtics out font "$fontname,10" nomirror
+set ytics out rotate by 45 scale 1.6 nomirror
+set size ratio 0.56
+set boxwidth 1.0 relative
+$scalecmd
+set style fill solid 1.0 border 0.1
+set terminal $term
+set output "${outfilnam}.$of"
+set datafile separator ';'
+set style fill solid 2.0 border 0.1
+set xdata time
+set timefmt "%d.%m.%y %H:%M:%S"
+set format x "%b"
+#maxx=GPVAL_Y_MAX*1.15
+#show variables maxx
+set xrange ["01.01.$yearinfile":"31.12.$yearinfile"]
+set lt 1 lc rgb "$rgbdown"
+set lt 2 lc rgb "$rgbup"
+plot for [i=2:3] "$tmp" using 1:i title columnhead(i) w boxes
+#show variables GPVAL
+#maxx=GPVAL_Y_MAX*1.15
+#show variables maxx
+#set yrange [*:maxx]
+#replot
+#save "lastplot.p"
+EOI
+	done
+rm -f $tmp
+exit

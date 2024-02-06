@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cd ~/fblogs
+cy=$1
+((py=cy-1))
+
+ty=$(date +%Y)
+if [ $cy != $ty ]; then
+	lastdate="31.12.${cy:2}"
+else
+	lastdate=$(date +%d.%m.%y)
+fi
+
+(grep besteht fblog-$py.log |tr / ';'|awk "{printf \"01.01.${cy:2:4} 00:00:00;%s\n\",\$9}"| tail -1;grep besteht fblog-$cy.log |tr / ';'|awk '{printf "%s %s;%s\n",$1,$2,$9}'); grep besteht fblog-$cy.log |tr / ';'|awk "{printf \"$lastdate 23:59:59;%s\n\",\$9}"| tail -1 |tr / ';'|awk '{printf "%s %s;%s\n",$1,$2,$9}'|less
