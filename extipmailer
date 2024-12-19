@@ -17,7 +17,7 @@ ldate=$(stat -c %y $HOME/.extip)
 ldatetz="+${ldate#*+}"
 ldate="${ldate%.*} $ldatetz"
 /usr/local/bin/extip > ${HOME}/.extip
-cat <<EOI | mail -s "External IP: $(/usr/local/bin/extip)" kardel@freenet.de
+cat <<EOI | mail -s "External IP: $(/usr/local/bin/extip)" pi
 Current IP is $currentip
 recorded $cdate
 
