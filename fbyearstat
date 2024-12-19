@@ -229,6 +229,7 @@ $scalecmd
 set style fill solid 1.0 border 0.1
 set terminal $term
 set output "${outfilnam}.$of"
+set size ratio 0.54
 plot "$of1" \
 t "Keine DSL Verbindung" w boxes fc rgb "$rgbout", \
 "$of2" \
