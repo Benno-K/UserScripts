@@ -39,6 +39,8 @@ fi
 
 luptim=$(cat "$ltimstore")
 uptim=$(cut -d. -f1 /proc/uptime)
+[ ${#luptim} = 0 ] && echo noluptim && exit
+[ ${#uptim} = 0 ] && echo nouptim && exit
 echo "$uptim" > "$ltimstore"
 if [ "$luptim" -gt "$uptim" ]; then
 	mail -s "SYSTEM $(hostname) HAS BEEN BOOTED!" $mailto <<EOI
