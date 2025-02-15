@@ -40,6 +40,14 @@ EOI
   exit $1
 }
 
+ratesFromLog () {
+  ((py=${1}-1))
+  ((ny=${1}+1))
+	[ -s $ld/fblog-${py}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");last=sprintf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))};END{printf last}' $ld/fblog-${py}.log
+	awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))}' $ld/fblog-${1}.log
+	[ -s $ld/fblog-${ny}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1));exit}' $ld/fblog-${ny}.log
+}
+
 # What is our name?
 bn=$(basename $0)
 
@@ -47,6 +55,8 @@ bn=$(basename $0)
 tn="${HOME}/.$bn"
 fn="$tn-XXXXXX-rate.tmp"
 
+# where the logs are
+ld=~pi/fblogs
 # default output format
 oformat="png"
 
@@ -103,9 +113,8 @@ do
 	exit 2
 done
 
-# get 2-digit year of 1.st line
-yearinfile="$(head -1 $2|cut -d. -f3)"
-yearinfile=${yearinfile:0:4}
+# get 2-digit year of some line
+yeartoplot="$(head -2000 $ld/fblog-$2.log|tail -1|awk '{print substr($0,7,2)}')"
 
 # create a tempfile for input
 of1=$(mktemp "$fn")
@@ -114,7 +123,7 @@ of1=$(mktemp "$fn")
 if [ "$1" == "" ]; then
 	read -p "Output file basename: " ofbn
 else
-  ofbn=$1
+  ofbn=$1-$2
 fi
 
 stamp="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit $bn durch gnuplot"
@@ -136,11 +145,11 @@ for of in $oformat
 	fi
 
 	# add headers to datafile
-  tmp=$(mktemp ~/.$bn-XXXXXX.tmp)
-	echo '"Zeit";"downstream";"upstream"' > $tmp
+  tmp=$of1
+	echo '"Zeit";"downstream";"upstream"' > $of1
 
 	# copy data to datafile
-  cat $2 >> $tmp
+  ratesFromLog $2 >> $of1
 
 	# tell outputfile
 	echo $ofbn.$of
@@ -172,7 +181,8 @@ set grid ytics layerdefault front lt 1 lc rgb "#999966"
 # define title text, set key
 # title font
 set key vertical reverse
-set key at graph 0.27,-0.14 right
+# set key at graph 0.27,-0.14 right
+set key at graph 0.11,1.15 right
 set key title font "$fontname,8"
 set key title left
 set key title "Übertragungsrichtung"
@@ -183,6 +193,7 @@ set key font "$fontname,8"
 # font
 set title font "$fontname,22"
 set title "DSL Geschwindigkeit  {/*0.6 $tyear}"
+set title offset 4,0
 
 # fineprint info about the
 # graph as vertical label
@@ -231,7 +242,8 @@ set format x "%b"
 # ensure the graph expands to
 # the while even if there is
 # data missing 
-set xrange ["01.01.$yearinfile":"31.12.$yearinfile"]
+set yrange [0:*]
+set xrange ["01.01.$yeartoplot":"31.12.$yeartoplot"]
 
 # set the boxes colors
 set lt 1 lc rgb "$rgbdown"
@@ -240,10 +252,10 @@ set lt 2 lc rgb "$rgbup"
 # finally plot the whole shit
 # using the first data line
 # as column headers
-plot for [i=2:3] "$tmp" using 1:i title columnhead(i) w boxes
+plot for [i=2:3] "$of1" using 1:i title columnhead(i) w boxes
 EOI
 	done # for this $of
 
 # kill tempfile
-rm -f $tmp
+rm -f $of1
 exit
