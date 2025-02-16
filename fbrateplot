@@ -54,7 +54,7 @@ bn=$(basename $0)
 
 # name for temporary file
 tmpnam="${HOME}/.${bn}"
-fn="$tmpnam-XXXXXX-rate.tmp"
+fn="${tmpnam}-XXXXXX-rate.tmp"
 
 # where the logs are
 logdir=~pi/fblogs
