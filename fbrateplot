@@ -2,13 +2,13 @@
 
 # Help text
 usage () {
-  if [ $1 -gt 0 ]; then
+  if [ ${1} -gt 0 ]; then
     outto=2
    else
      outto=1
   fi
-  cat <<EOI >&$outto
- Usage $0 [option [option]] [output file basename] [year]
+  cat <<EOI >&${outto}
+ Usage ${0} [option [option]] [output file basename] [year]
   Options:
   -fmt
    format of output file(s)
@@ -27,36 +27,37 @@ usage () {
 		boxes (e.g. red, #ff0000
 		etc.)
 EOI
-  if [ $1 == 0 ]; then
-  cat <<EOI >&$outto
+  if [ ${1} == 0 ]; then
+  cat <<EOI >&${outto}
   Synopsis:
-   $bn uses the logfiles of
+   ${bn} uses the logfiles of
    a FRITZ!box collected by
    fblogfetch to create a
    diagram showing the 
    data rates over the year.
 EOI
  fi
-  exit $1
+  exit ${1}
 }
 
+# get rates from Fritzbox log and create a CSV of it
 ratesFromLog () {
-  ((py=${1}-1))
-  ((ny=${1}+1))
-	[ -s $ld/fblog-${py}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");last=sprintf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))};END{printf last}' $ld/fblog-${py}.log
-	awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))}' $ld/fblog-${1}.log
-	[ -s $ld/fblog-${ny}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1));exit}' $ld/fblog-${ny}.log
+  ((prevYear=${1}-1))
+  ((nextYear=${1}+1))
+	[ -s ${logdir}/fblog-${prevYear}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");last=sprintf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))};END{printf last}' ${logdir}/fblog-${prevYear}.log
+	awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1))}' ${logdir}/fblog-${1}.log
+	[ -s ${logdir}/fblog-${nextYear}.log ] && awk '/ kbit\/s/{dt=$1;tm=$2;idx=index($9,"/");printf("%s %s;%s;%s\n",$1,$2,substr($9,1,idx-1),substr($9,idx+1));exit}' ${logdir}/fblog-${nextYear}.log
 }
 
 # What is our name?
 bn=$(basename $0)
 
 # name for temporary file
-tn="${HOME}/.$bn"
-fn="$tn-XXXXXX-rate.tmp"
+tmpnam="${HOME}/.${bn}"
+fn="$tmpnam-XXXXXX-rate.tmp"
 
 # where the logs are
-ld=~pi/fblogs
+logdir=~pi/fblogs
 # default output format
 oformat="png"
 
@@ -70,95 +71,95 @@ rgbup="#ff9933"
 # parse commamd line 
 while [ "${1:0:1}" == "-" ]
 do
-	if [ "$1" == "-log" ];then
+	if [ "${1}" == "-log" ];then
 		shift
 		scalecmd="set logscale y"
 		continue
 	fi
-	if [[ $1 =~ ^-[h\-][help]*$ ]];then
+	if [[ ${1} =~ ^-[h\-][help]*$ ]];then
 		usage 0
 	fi
-	if [ "$1" == "-fmt" ];then
+	if [ "${1}" == "-fmt" ];then
 		# As soon as -fmt is
 		# present the first time
 		# ALL wanted formats need
 		# to be specified -fmt!
 		# otherwise we would ALWAYS
 		# create a png
-		if [ "$oformat" = "png" ]; then
+		if [ "${oformat}" = "png" ]; then
 			oformat=""
 		fi
 		shift
-		if [[ $1 =~ "," ]]; then
-			oformat=$(echo $1|sed -e 's/,/ /g')
+		if [[ ${1} =~ "," ]]; then
+			oformat=$(echo ${1}|sed -e 's/,/ /g')
 		else
-		  oformat="$oformat$1 "
+		  oformat="${oformat}${1} "
 		fi
 		shift
 		continue
 	fi
-	if [ "$1" == "-rgbup" ];then
+	if [ "${1}" == "-rgbup" ];then
 		shift
-	  rgbup="$1"
-		shift
-		continue
-	fi
-	if [ "$1" == "-rgbdown" ];then
-		shift
-	  rgbdown="$1"
+	  rgbup="${1}"
 		shift
 		continue
 	fi
-	echo >&2 "Illegal option: $1  - see $bn -h for help"
+	if [ "${1}" == "-rgbdown" ];then
+		shift
+	  rgbdown="${1}"
+		shift
+		continue
+	fi
+	echo >&2 "Illegal option: ${1}  - see ${bn} -h for help"
 	exit 2
 done
 
 # get 2-digit year of some line
-yeartoplot="$(head -2000 $ld/fblog-$2.log|tail -1|awk '{print substr($0,7,2)}')"
+yeartoplot="$(head -2000 ${logdir}/fblog-${2}.log|tail -1|awk '{print substr($0,7,2)}')"
 
 # create a tempfile for input
-of1=$(mktemp "$fn")
+outfil=$(mktemp "${fn}")
 
 # basename fog all output files
-if [ "$1" == "" ]; then
+if [ "${1}" == "" ]; then
 	read -p "Output file basename: " ofbn
 else
-  ofbn=$1-$2
+  ofbn=${1}-${2}
 fi
 
-stamp="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit $bn durch gnuplot"
+stamp="Erstellt am $(date +%d.%m.%Y) um $(date +%H:%M:%S) mit ${bn} durch gnuplot"
 
 # for the formats not directly
 # corresponding to the terminal
 # type, set it
-for of in $oformat
+for of in ${oformat}
 	do
-	term=$of
-	if [ "$of" == "html" ]; then
+	term=${of}
+	if [ "${of}" == "html" ]; then
 		term="canvas"
 	fi
-	if [ "$of" == "eps" ]; then
+	if [ "${of}" == "eps" ]; then
 		term="epscairo"
 	fi
-	if [ "$of" == "png" ]; then
+	if [ "${of}" == "png" ]; then
 		term="pngcairo"
 	fi
 
 	# add headers to datafile
-  tmp=$of1
-	echo '"Zeit";"downstream";"upstream"' > $of1
+  tmp=${outfil}
+	echo '"Zeit";"downstream";"upstream"' > ${outfil}
 
 	# copy data to datafile
-  ratesFromLog $2 >> $of1
+  ratesFromLog ${2} >> ${outfil}
 
 	# tell outputfile
-	echo $ofbn.$of
+	echo ${ofbn}.${of}
 
 	# get 2-year digits from
 	# filename
-	opos=${#ofbn}
-	((opos=$opos-4))
-	tyear=${ofbn:$opos}
+	offsetposition=${#ofbn}
+	((offsetposition=${offsetposition}-4))
+	tyear=${ofbn:${offsetposition}}
 
 	# now plot
   gnuplot <<EOI
@@ -183,30 +184,30 @@ set grid ytics layerdefault front lt 1 lc rgb "#999966"
 set key vertical reverse
 # set key at graph 0.27,-0.14 right
 set key at graph 0.11,1.15 right
-set key title font "$fontname,8"
+set key title font "${fontname},8"
 set key title left
 set key title "Übertragungsrichtung"
-set key font "$fontname,8"
+set key font "${fontname},8"
 
 # the title of the graph
 # including year in smaller
 # font
-set title font "$fontname,22"
-set title "DSL Geschwindigkeit  {/*0.6 $tyear}"
+set title font "${fontname},22"
+set title "DSL Geschwindigkeit  {/*0.6 ${tyear}}"
 set title offset 4,0
 
 # fineprint info about the
 # graph as vertical label
-set label font "$fontname,6" rotate by -90
-set label 1 "$stamp" at graph 1.02,0.5 center
+set label font "${fontname},6" rotate by -90
+set label 1 "${stamp}" at graph 1.02,0.5 center
 
 # axis labelling
-set xlabel 'Monat' font "$fontname,12" 
-set ylabel 'Datenrate  {/*0.5 Kbit/s}' font "$fontname,12" offset -0.8,0
+set xlabel 'Monat' font "${fontname},12" 
+set ylabel 'Datenrate  {/*0.5 Kbit/s}' font "${fontname},12" offset -0.8,0
 
 # show only bottom and left
 # axis ticks
-set xtics out font "$fontname,10" nomirror
+set xtics out font "${fontname},10" nomirror
 set ytics out rotate by 45 scale 1.6 nomirror
 
 # make it a 16:9 horizontal
@@ -219,7 +220,7 @@ set boxwidth 1.0 relative
 
 # set logarithmic scale if
 # requested by -log
-$scalecmd
+${scalecmd}
 
 # fill the whole box with
 # color
@@ -229,8 +230,8 @@ set style fill solid 1.0 border 0.1
 set datafile separator ';'
 
 # set output type and filename
-set terminal $term
-set output "${ofbn}.$of"
+set terminal ${term}
+set output "${ofbn}.${of}"
 
 # x-data are time-values, use
 # localized abbreviated month
@@ -243,19 +244,19 @@ set format x "%b"
 # the while even if there is
 # data missing 
 set yrange [0:*]
-set xrange ["01.01.$yeartoplot":"31.12.$yeartoplot"]
+set xrange ["01.01.${yeartoplot}":"31.12.${yeartoplot}"]
 
 # set the boxes colors
-set lt 1 lc rgb "$rgbdown"
-set lt 2 lc rgb "$rgbup"
+set lt 1 lc rgb "${rgbdown}"
+set lt 2 lc rgb "${rgbup}"
 
 # finally plot the whole shit
 # using the first data line
 # as column headers
-plot for [i=2:3] "$of1" using 1:i title columnhead(i) w boxes
+plot for [i=2:3] "${outfil}" using 1:i title columnhead(i) w boxes
 EOI
-	done # for this $of
+	done # for this ${of}
 
 # kill tempfile
-rm -f $of1
+rm -f ${outfil}
 exit
