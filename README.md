@@ -132,4 +132,3 @@ fbpwdget and fbpwdsave to decrypt
 the contents of the credentials file (~/,fböogcred.logfetch) which
 contains the crypted password
 of the non-privileged account
-
