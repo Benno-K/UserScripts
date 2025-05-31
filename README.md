@@ -109,7 +109,7 @@ a definition like this:
 
 That file is sourced by fblogread
 to decrypt the contents of the 
-credentials file (~/,fböogcred.logfetch) which
+credentials file (~/,fblogcred.logfetch) which
 contains the crypted password
 of the non-privileged account
 
