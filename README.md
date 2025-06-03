@@ -90,7 +90,7 @@ settings that need to be
 incorporated for the mail
 
 ## fblogfetcher
-Fetches log data from FRITZ!box (all types, as you can see in the WebGUI as "System/Ereignisse/Alle", but only one day. If no date is specified it uses yesterday 
+Fetches log data from FRITZ!box (all types, as you can see in the WebGUI as "System/Ereignisse/Alle"), but only one day. If no date is specified it uses yesterday 
 
 ### Arguments
 
