@@ -24,7 +24,7 @@ Usage: crnupdate [option [param]..] inputfile [outputfile]
  The outputfile must not be given when one of
   the options -b or -c are present
  Options:
-  -b bsckup-file-suffix
+  -b backup-file-suffix
      edit input file in place, but keep a backup
      file, the suffix will be appended to the
 		 name of the inputfile
