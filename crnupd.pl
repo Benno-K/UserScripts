@@ -63,11 +63,21 @@ sub usage () {
 	     copyright info. MUST start with ##
 	     otherwise ## will be prepended.
 	  -r replace the inputfile with the result
+	  -s stay silent if copyright notice is already
+	     up to date and no files where touched therefor
 	EOI
 }
 
+sub prerr {
+	print STDERR @_;
+}
+
+sub prerrf {
+	printf STDERR @_;
+}
+
 # Parse options, display help on failure
-if ( ! getopts('b:c:hm:r') ) {
+if ( ! getopts('b:c:hm:rs') ) {
 	usage;
 	exit 1;
 }
@@ -89,8 +99,8 @@ if ( $opt_m ) {
 	}
 }
 
-# For the copyright text
-my $crn;
+# For the copyright texts
+my ($crn, $oldcrn);
 
 # Alternative copyright file with -c ?
 if ( $opt_c ) {
@@ -111,7 +121,7 @@ if ( $opt_r || $opt_b ) {
 # and two args without -b/-r. If not, complain.
 if ( ( ( $#ARGV < 0 ) || ( $#ARGV > 1  ) ) ||
    ( ( $#ARGV == 0 ) && ( !$opt_r && !$opt_b ) ) ) {
-	print STDERR "Wrong (number of) arguments\n";
+	prerr "Wrong (number of) arguments\n";
 	usage;
 	exit(1);
 }
@@ -128,15 +138,26 @@ close(CRN);
 # while copying permissions from input to output
 open(SRC, "<", $ARGV[0]) or die "error opening input $ARGV[0]";
 my ($dev, $ino, $mode, @rest) = stat($ARGV[0]);
-#printf STDERR "Current mode: %o\n",$mode;
 open(DST, ">", $ARGV[1]) or die "error opening output $ARGV[1]";
-chmod $mode, $ARGV[1] or print STDERR "warning: chmod for $ARGV[1] did not succeed";
+chmod $mode, $ARGV[1] or prerr "warning: chmod for $ARGV[1] did not succeed";
 # Read input until copyright notice while writing
 # the lines to the output
 while (<SRC>) {
 	# If the marker (for copyright) is seen read it
 	# and use it for writing the notice (unless a new
 	# marker was specified by -m
+	if ( $seen == 2 ) {
+		$seen++;  # this is actually a lie, we didn't see it
+							# the third time, but ensure we only do this
+							# once
+		if ( $oldcrn eq $crn ) {
+			unlink $ARGV[1] or prerr "warning; failed to delete temporary file $ARGV[1]\n";
+			if ( ! $opt_s ) {
+				prerr "File $ARGV[0] already up to date - no files touched\n";
+			}
+			exit;
+		}
+	}
 	if ( /^$searchmark/ ) {
 		if ( $seen == 1 ) {
 			if ( ! $opt_m ) {
@@ -150,6 +171,8 @@ while (<SRC>) {
 		# copyright notice, copy input to output
 		if ( $seen != 1 ) {
 			print DST;
+		} else {
+			$oldcrn = sprintf("%s%s",$oldcrn,$_);
 		}
 	}
 }
