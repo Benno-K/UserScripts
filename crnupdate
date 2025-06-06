@@ -167,7 +167,7 @@ while (<SRC>) {
 		}
 		$seen++;
 	} else {
-		# If we are not just reading (away} the old
+		# If we are not just reading (away) the old
 		# copyright notice, copy input to output
 		if ( $seen != 1 ) {
 			print DST;
@@ -183,7 +183,7 @@ while (<SRC>) {
 # contain a copyright notice. 
 # So we have to re-read and re-write to INSERT the
 # copyright notice just after line 1 (to leave
-# any possibly existing she-bang intact.
+# any possibly existing she-bang intact).
 if ( $seen == 0 ) {
 	# Re-open source as we did not find a line where
 	# to insert copyright information, so we put it
